@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOSTy - Проверка документов на соответствие ГОСТ</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/roadmap.css">
+    <link rel="stylesheet" href="css/notification.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/contact-form.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>GOSTy</h1>
+                <p>Проверка документов на соответствие ГОСТ</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="main.html" class="active">О проекте</a></li>
+                    <li><a href="check.html">Проверить документ</a></li>
+                    <li><a href="#roadmap">Дорожная карта</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Плавающие элементы для фона -->
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+    
+    <!-- Контейнер для частиц -->
+    <div class="particles-container"></div>
+    
+    <!-- Основной контейнер -->
+    <div class="container">
+        <div class="typewriter">
+            <h1>Тук-тук-тук, это GOSTy!<br> Впустите стандарты в ваши документы</h1>
+        </div>
+        
+        <div class="info-card shadow-card">
+            <h2><span class="animated-icon">📝</span> Что такое GOSTy?</h2>
+            <div class="gosty-info">
+                <div class="gosty-intro">
+                    <p>GOSTy — это интеллектуальный сервис для автоматической проверки документов на соответствие стандартам ГОСТ. Наша система:</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check-circle"></i> Анализирует загруженные DOCX документы</li>
+                        <li><i class="fas fa-check-circle"></i> Выявляет отклонения от требований ГОСТов</li>
+                        <li><i class="fas fa-check-circle"></i> Формирует подробные отчеты с рекомендациями</li>
+                        <li><i class="fas fa-check-circle"></i> Экономит ваше время на проверке документации</li>
+                    </ul>
+                </div>
+                <div class="highlight-box">
+                    <p>Автоматизируйте проверку соответствия ГОСТам и избавьтесь от рутинной работы!</p>
+                </div>
+            </div>
+            <div class="cta-buttons">
+                <a href="check.html" class="glow-button animated-button">Проверить документ</a>
+                <a href="report-example.html" target="_blank" class="glow-button animated-button">Посмотреть пример отчета</a>
+            </div>
+        </div>
+        
+        <div class="info-card shadow-card">
+            <h2><span class="animated-icon">🔍</span> Как пользоваться</h2>
+            <div class="usage-steps">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Загрузите документ</h3>
+                        <p>Перетащите ваш DOCX файл в специальную область или выберите его через диалоговое окно</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Запустите проверку</h3>
+                        <p>Нажмите кнопку "Проверить" и дождитесь окончания анализа вашего документа</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Получите отчет</h3>
+                        <p>Ознакомьтесь с подробным отчетом о соответствии вашего документа требованиям ГОСТ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Поддерживаемые стандарты -->
+        <div class="info-card shadow-card">
+            <h3>Поддерживаемые стандарты:</h3>
+            <div class="supported-standards">
+                <div class="standard-item glow-on-hover">
+                    <div class="standard-icon">
+                        <i class="fas fa-file-lines"></i>
+                    </div>
+                    <div class="standard-name">ГОСТ 2.105-2019</div>
+                    <div class="standard-desc">Единая система конструкторской документации</div>
+                    <!--a href="#" class="gost-link">Смотреть ГОСТ <i class="fas fa-arrow-right"></i></a-->
+                </div>
+                <div class="standard-item glow-on-hover">
+                    <div class="standard-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="standard-name">ГОСТ 7.0.11-2011</div>
+                    <div class="standard-desc">Диссертация и автореферат диссертации</div>
+                    <!--a href="#" class="gost-link">Смотреть ГОСТ <i class="fas fa-arrow-right"></i></a-->
+                </div>
+                <div class="standard-item glow-on-hover">
+                    <div class="standard-icon">
+                        <i class="fas fa-spell-check"></i>
+                    </div>
+                    <div class="standard-name">ГОСТ 7.0.12-2011</div>
+                    <div class="standard-desc">Библиографическая запись. Сокращение слов</div>
+                    <!--a href="#" class="gost-link">Смотреть ГОСТ <i class="fas fa-arrow-right"></i></a-->
+                </div>
+                <div class="standard-item glow-on-hover">
+                    <div class="standard-icon">
+                        <i class="fas fa-quote-right"></i>
+                    </div>
+                    <div class="standard-name">ГОСТ 7.0.5-2008</div>
+                    <div class="standard-desc">Библиографическая ссылка</div>
+                    <!--a href="#" class="gost-link">Смотреть ГОСТ <i class="fas fa-arrow-right"></i></a-->
+                </div>
+                <div class="standard-item glow-on-hover">
+                    <div class="standard-icon">
+                        <i class="fas fa-microscope"></i>
+                    </div>
+                    <div class="standard-name">ГОСТ 7.32-2017</div>
+                    <div class="standard-desc">Отчет о научно-исследовательской работе</div>
+                    <!--a href="#" class="gost-link">Смотреть ГОСТ <i class="fas fa-arrow-right"></i></a-->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Дорожная карта проекта -->
+        <div class="info-card shadow-card" id="roadmap">
+            <h2><span class="animated-icon">🗺️</span> Дорожная карта проекта</h2>
+            <div class="roadmap-timeline">
+                <div class="roadmap-item completed">
+                    <div class="roadmap-date">апрель 2025</div>
+                    <div class="roadmap-content">
+                        <h3>Запуск MVP</h3>
+                        <ul>
+                            <li>Базовая проверка документов</li>
+                            <li>Поддержка основных ГОСТов</li>
+                            <li>Веб-интерфейс</li>
+                            <li>Исправление ошибок выявленных в ходе тестирования</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="roadmap-item completed">
+                    <div class="roadmap-date">июнь 2025</div>
+                    <div class="roadmap-content">
+                        <h3>Расширение функциональности</h3>
+                        <ul>
+                            <li>Подробные отчеты с рекомендациями</li>
+                            <li>Максимальное покрытие текущих ГОСТов</li>
+                            <li>Внедрение дополнительных ГОСТов</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="roadmap-item active">
+                    <div class="roadmap-date">сентябрь 2025</div>
+                    <div class="roadmap-content">
+                        <h3>Внедрение ИИ-аналитики</h3>
+                        <ul>
+                            <li>Проверка тональности текста на соответствие деловому стилю</li>
+                            <li>Проверка на когнитивную нагрузку - сложность текста</li>
+                            <li>Проверка на однозначность документации</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-date">декабрь 2025</div>
+                    <div class="roadmap-content">
+                        <h3>Расширение поддержки форматов</h3>
+                        <ul>
+                            <li>Поддержка PDF документов</li>
+                            <li>Поддержка OpenDocument Format (ODF)</li>
+                            <li>Улучшенное распознавание таблиц и формул</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-date">март 2026</div>
+                    <div class="roadmap-content">
+                        <h3>Решения для бизнеса</h3>
+                        <ul>
+                            <li>Поддержка локальных требований по оформлению</li>
+                            <li>Десктоп приложение для закрытых сетей</li>
+                            <li>автоматическое исправление ошибок</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card shadow-card">
+            <h2><span class="animated-icon">🙏</span> Поддержите проект</h2>
+            <div class="donation-container">
+                <div class="donation-text">
+                    <h3>Помогите мне сделать GOSTy ещё лучше!</h3>
+                    <p>Если GOSTy помог вам сэкономить время и силы при проверке документов, вы можете поддержать развитие проекта. Ваша поддержка имеет огромное значение!</p>
+                    
+                    <div class="donation-benefits">
+                        <p>Благодаря вашей поддержке я смогу:</p>
+                        <ul>
+                            <li>Добавить поддержку новых стандартов ГОСТ</li>
+                            <li>Разработать возможность автоматического исправления ошибок</li>
+                            <li>Улучшить алгоритмы проверки для более точных результатов</li>
+                            <li>Создать инструменты для интеграции с популярными редакторами</li>
+                        </ul>
+                        <p>Даже если у вас нет возможности сделать пожертвование, вы можете дать обратную связь - это очень важно</p>
+                    </div>
+
+                </div>
+                
+                <div class="qr-code-container">
+                    <img src="img/qrCode.png" alt="QR-код для благодарностей" class="donation-qr">
+                    <div class="qr-code-caption">Отсканируйте для перевода</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card shadow-card">
+            <h2><span class="animated-icon">❓</span> Часто задаваемые вопросы</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Какие форматы документов поддерживает сервис?</h3>
+                        <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>В настоящее время GOSTy поддерживает документы в формате DOCX (Microsoft Word). Поддержка дополнительных форматов (PDF, ODT) планируется в будущих обновлениях.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>В безопасности ли мои документы?</h3>
+                        <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Безопасность ваших данных — мой приоритет. Документы передаются на защищенный сервер и автоматически удаляются сразу после проверки.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Как я могу дать обратную связь?</h3>
+                        <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Вы можете написать в наш telegram-чат @gosty_normcontol_chat</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="footer-brand">GOSTy</div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="social-links">
+                <a href="https://github.com/i-kogda-nibud-nas-ne-budet/GOSTy_beta" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://t.me/gosty_normcontol_chat" target="_blank" title="Telegram"><i class="fab fa-telegram"></i></a>
+            </div>
+            <p>© 2025 GOSTy</p>
+        </footer>
+    </div>
+
+    <!-- Кнопка "Наверх" -->
+    <div class="back-to-top">↑</div>
+    <script src="js/api-client.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/notification-handler.js"></script>
+
+    
+</body>
+</html>
+</qodoArtifact>
