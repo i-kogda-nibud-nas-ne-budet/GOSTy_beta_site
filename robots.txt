@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Sitemap: https://xn--e1akkdfpb6a.xn--p1ai/sitemap.xml
+
+# Разрешить индексацию всем поисковым роботам
+User-agent: Yandex
+Allow: /
+Host: нормконтроль.рф
+
+User-agent: Googlebot
+Allow: /
