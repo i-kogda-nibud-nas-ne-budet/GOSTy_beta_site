@@ -19,6 +19,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link rel="stylesheet" href="css/contact-form.css">
+        <link rel="icon" href="img/logo.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="img/logo.ico" type="image/x-icon">
     </head>
 <body>
     <header>
@@ -29,9 +31,10 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="main.html" class="active">О проекте</a></li>
+                    <li><a href="index.html" class="active">О проекте</a></li>
                     <li><a href="check.html">Проверить документ</a></li>
                     <li><a href="#roadmap">Дорожная карта</a></li>
+                    <li><a href="my-goals.html">Мои цели</a></li>
                 </ul>
             </nav>
         </div>
@@ -51,7 +54,7 @@
     <!-- Основной контейнер -->
     <div class="container">
         <div class="typewriter">
-            <h1>Тук-тук-тук, это GOSTy!<br> Впустите стандарты в ваши документы</h1>
+            <h2>Тук-тук-тук, это GOSTy!<br> Впустите стандарты в ваши документы</h2>
         </div>
         
         <div class="info-card shadow-card">
@@ -297,8 +300,14 @@
     <script src="js/api-client.js"></script>
     <script src="js/main.js"></script>
     <script src="js/notification-handler.js"></script>
-
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "GOSTy - Проверка документов на соответствие ГОСТ",
+          "url": "https://нормконтроль.рф/"
+        }
+    </script>
     
 </body>
 </html>
-</qodoArtifact>
