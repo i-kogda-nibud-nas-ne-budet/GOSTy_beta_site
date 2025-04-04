@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://xn--e1akkdfpb6a.xn--p1ai/sitemap.xml
+Sitemap: https://xn--j1acbdcdcbnev7j.xn--p1ai/sitemap.xml
 
 # Разрешить индексацию всем поисковым роботам
 User-agent: Yandex
