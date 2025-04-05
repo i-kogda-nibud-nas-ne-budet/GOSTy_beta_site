@@ -40,9 +40,9 @@
     <link rel="shortcut icon" href="img/logo.ico" type="image/x-icon">
     <script>
         // Проверяем, является ли текущий URL пуникод-версией
-        if (window.location.hostname === 'xn--j1acbdcdcbnev7j.xn--p1ai') {
-          // Редирект на кириллическую версию
-          window.location.replace('https://нормконтроль.рф' + window.location.pathname);
+        if (decodeURIComponent(window.location.hostname) !== 'нормконтроль.рф') {
+        // Редирект на кириллическую версию
+        window.location.replace('https://нормконтроль.рф' + window.location.pathname);
         }
       </script>
     

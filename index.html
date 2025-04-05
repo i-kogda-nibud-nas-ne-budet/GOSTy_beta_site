@@ -49,9 +49,10 @@
     </script>
     <script>
         // Проверяем, является ли текущий URL пуникод-версией
-        if (window.location.hostname === 'xn--j1acbdcdcbnev7j.xn--p1ai') {
-          // Редирект на кириллическую версию
-          window.location.replace('https://нормконтроль.рф' + window.location.pathname);
+        // Проверяем, отображается ли URL как пуникод
+        if (decodeURIComponent(window.location.hostname) !== 'нормконтроль.рф') {
+        // Редирект на кириллическую версию
+        window.location.replace('https://нормконтроль.рф' + window.location.pathname);
         }
       </script>
 <body>
