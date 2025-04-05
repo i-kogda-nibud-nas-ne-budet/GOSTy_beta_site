@@ -1,11 +1,18 @@
+# Общие правила для всех поисковых роботов
 User-agent: *
 Allow: /
-Sitemap: https://xn--j1acbdcdcbnev7j.xn--p1ai/sitemap.xml
+Disallow: /cgi-bin/
+Disallow: /tmp/
+Disallow: /admin/
 
-# Разрешить индексацию всем поисковым роботам
+# Правила для Яндекса
 User-agent: Yandex
 Allow: /
 Host: нормконтроль.рф
 
+# Правила для Google
 User-agent: Googlebot
 Allow: /
+
+# Sitemap
+Sitemap: https://нормконтроль.рф/sitemap.xml
