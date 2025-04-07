@@ -2406,87 +2406,103 @@ function initializeDocumentOrientedView() {
     
     // Находим все карточки документов
     const documentCards = document.querySelectorAll('.document-card');
+    
     documentCards.forEach((card, docIndex) => {
-        // Проверяем, есть ли уже документо-ориентированное представление
-        if (card.querySelector('.document-oriented-view')) {
-            return;
+        // Удаляем существующее представление, если оно есть
+        const existingView = card.querySelector('.document-oriented-view');
+        if (existingView) {
+            existingView.remove();
         }
         
-        // Создаем контейнер для документо-ориентированного представления
+        // Создаем новое представление
         const documentView = document.createElement('div');
         documentView.className = 'document-oriented-view';
-        
-        // Получаем данные о правил��х с ошибками
-        const failedRules = card.querySelectorAll('.rule-item.failed');
-        
-        // Собираем все локации из правил
-        const locations = [];
-        
-        failedRules.forEach((rule, ruleIndex) => {
-            const ruleId = rule.id;
-            const ruleName = rule.querySelector('.rule-name').textContent;
-            
-            // Находим все локации для данного правила
-            const ruleLocations = rule.querySelectorAll('.location-item');
-            
-            ruleLocations.forEach((location, locationIndex) => {
-                const locationId = `location-${ruleId}-${locationIndex + 1}`;
-                
-                // Получаем текст параграфа, если он есть
-                const paragraphText = location.querySelector('.location-text')?.textContent;
-                const paragraphNumber = location.querySelector('.location-type')?.textContent.match(/\d+/)?.[0];
-                
-                if (paragraphText) {
-                    locations.push({
-                        ruleId: ruleId,
-                        ruleName: ruleName,
-                        locationId: locationId,
-                        locationIndex: locationIndex + 1,
-                        paragraphNumber: paragraphNumber,
-                        text: paragraphText
-                    });
-                }
-            });
-        });
-        
-        // Сортируем локации по номеру параграфа, если возможно
-        locations.sort((a, b) => {
-            if (a.paragraphNumber && b.paragraphNumber) {
-                return parseInt(a.paragraphNumber) - parseInt(b.paragraphNumber);
-            }
-            return 0;
-        });
         
         // Создаем заголовок
         const viewHeader = document.createElement('h3');
         viewHeader.textContent = 'Вид документа с нарушениями';
         documentView.appendChild(viewHeader);
         
-        // Создаем список параграфов
-        if (locations.length > 0) {
-            // Группируем локации по параграфам (чтобы избежать дублирования)
-            const paragraphMap = new Map();
+        // Создаем структуру данных для хранения параграфов и их нарушений
+        const paragraphs = new Map();
+        
+        // Получаем все правила с ошибками
+        const failedRules = card.querySelectorAll('.rule-item.failed');
+        
+        // Для каждого правила собираем локации
+        failedRules.forEach(rule => {
+            const ruleId = rule.id;
+            const ruleName = rule.querySelector('.rule-name').textContent;
             
-            locations.forEach(location => {
-                const key = location.paragraphNumber || location.text;
-                if (!paragraphMap.has(key)) {
-                    paragraphMap.set(key, []);
+            // Получаем все локации для этого правила
+            const locations = rule.querySelectorAll('.location-item');
+            
+            // Используем Set для отслеживания уже обработанных текстов параграфов для этого правила
+            const processedParagraphs = new Set();
+            
+            locations.forEach((location, locationIndex) => {
+                // Получаем информацию о параграфе
+                const paragraphText = location.querySelector('.location-text')?.textContent;
+                if (!paragraphText) return; // Пропускаем, если нет текста
+                
+                const paragraphTypeElement = location.querySelector('.location-type');
+                const paragraphTypeText = paragraphTypeElement ? paragraphTypeElement.textContent : '';
+                const paragraphNumber = paragraphTypeText.match(/\d+/)?.[0];
+                
+                // Создаем уникальный ключ для параграфа
+                const paragraphKey = paragraphNumber ? 
+                    `para-${paragraphNumber}` : 
+                    `text-${paragraphText.substring(0, 30)}`;
+                
+                // Если параграф еще не добавлен, создаем его
+                if (!paragraphs.has(paragraphKey)) {
+                    paragraphs.set(paragraphKey, {
+                        number: paragraphNumber,
+                        text: paragraphText,
+                        typeText: paragraphTypeText,
+                        violations: [] // Массив нарушений для этого параграфа
+                    });
                 }
-                paragraphMap.get(key).push(location);
+                
+                // Проверяем, не добавляли ли мы уже это правило для этого параграфа
+                // Используем комбинацию текста параграфа и ID правила
+                const processedKey = `${paragraphKey}-${ruleId}`;
+                
+                if (!processedParagraphs.has(processedKey)) {
+                    processedParagraphs.add(processedKey);
+                    
+                    // Добавляем информацию о нарушении
+                    paragraphs.get(paragraphKey).violations.push({
+                        ruleId: ruleId,
+                        ruleName: ruleName,
+                        locationIndex: locationIndex,
+                        locationId: `location-${ruleId}-${locationIndex + 1}`
+                    });
+                }
             });
+        });
+        
+        // Если есть параграфы с нарушениями, отображаем их
+        if (paragraphs.size > 0) {
+            // Преобразуем Map в массив и сортируем по номеру параграфа
+            const sortedParagraphs = Array.from(paragraphs.values())
+                .sort((a, b) => {
+                    if (a.number && b.number) {
+                        return parseInt(a.number) - parseInt(b.number);
+                    }
+                    return 0;
+                });
             
             // Создаем элементы для каждого параграфа
-            paragraphMap.forEach((paragraphLocations, key) => {
+            sortedParagraphs.forEach(paragraph => {
                 const paragraphContainer = document.createElement('div');
                 paragraphContainer.className = 'paragraph-container';
                 
-                // Добавляем заголовок параграфа, если есть номер
-                if (paragraphLocations[0].paragraphNumber) {
-                    const paragraphHeader = document.createElement('div');
-                    paragraphHeader.className = 'paragraph-header';
-                    paragraphHeader.textContent = `Параграф ${paragraphLocations[0].paragraphNumber}`;
-                    paragraphContainer.appendChild(paragraphHeader);
-                }
+                // Добавляем заголовок параграфа
+                const paragraphHeader = document.createElement('div');
+                paragraphHeader.className = 'paragraph-header';
+                paragraphHeader.textContent = paragraph.typeText || 'Параграф';
+                paragraphContainer.appendChild(paragraphHeader);
                 
                 // Добавляем текст параграфа
                 const paragraphTextDiv = document.createElement('div');
@@ -2498,89 +2514,103 @@ function initializeDocumentOrientedView() {
                 
                 const textContent = document.createElement('span');
                 textContent.className = 'paragraph-text-content';
-                textContent.textContent = paragraphLocations[0].text;
+                textContent.textContent = paragraph.text;
                 
                 paragraphTextDiv.appendChild(textPrefix);
                 paragraphTextDiv.appendChild(textContent);
                 paragraphContainer.appendChild(paragraphTextDiv);
                 
-                // Добавляем список нарушений для этого параграфа
-                const violationsList = document.createElement('div');
-                violationsList.className = 'paragraph-violations-list';
-                
-                paragraphLocations.forEach(location => {
-                    const violationItem = document.createElement('div');
-                    violationItem.className = 'paragraph-violation-item';
-                    violationItem.dataset.ruleId = location.ruleId;
-                    violationItem.dataset.locationId = location.locationId;
+                // Добавляем список нарушений
+                if (paragraph.violations && paragraph.violations.length > 0) {
+                    const violationsList = document.createElement('div');
+                    violationsList.className = 'paragraph-violations-list';
                     
-                    // Создаем чекбокс
-                    const checkboxContainer = document.createElement('div');
-                    checkboxContainer.className = 'paragraph-checkbox-container';
+                    // Используем Set для отслеживания уникальных имен правил
+                    const uniqueRuleNames = new Set();
+                    const uniqueViolations = [];
                     
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `fix-paragraph-${location.ruleId}-${location.locationIndex}-${docIndex}`;
-                    checkbox.className = 'paragraph-fix-checkbox';
-                    checkbox.dataset.ruleId = location.ruleId;
-                    checkbox.dataset.locationIndex = location.locationIndex;
+                    paragraph.violations.forEach(violation => {
+                        // Добавляем только уникальные имена правил
+                        if (!uniqueRuleNames.has(violation.ruleName)) {
+                            uniqueRuleNames.add(violation.ruleName);
+                            uniqueViolations.push(violation);
+                        }
+                    });
                     
-                    // Привязываем чекбокс к существующему чекбоксу локации
-                    const originalCheckbox = document.getElementById(`fix-location-${location.ruleId}-${location.locationIndex}`);
-                    if (originalCheckbox) {
-                        // Синхронизируем начальное состояние
-                        checkbox.checked = originalCheckbox.checked;
+                    uniqueViolations.forEach(violation => {
+                        const violationItem = document.createElement('div');
+                        violationItem.className = 'paragraph-violation-item';
+                        violationItem.dataset.ruleId = violation.ruleId;
+                        violationItem.dataset.locationId = violation.locationId;
                         
-                        // Добавляем обработчик для синхронизации
-                        checkbox.addEventListener('change', function() {
-                            // Обновляем оригинальный чекбокс
-                            originalCheckbox.checked = this.checked;
+                        // Создаем чекбокс
+                        const checkboxContainer = document.createElement('div');
+                        checkboxContainer.className = 'paragraph-checkbox-container';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `fix-paragraph-${violation.ruleId}-${violation.locationIndex}-${docIndex}`;
+                        checkbox.className = 'paragraph-fix-checkbox';
+                        checkbox.dataset.ruleId = violation.ruleId;
+                        checkbox.dataset.locationIndex = violation.locationIndex;
+                        
+                        // Привязываем чекбокс к существующему чекбоксу локации
+                        const originalCheckbox = document.getElementById(`fix-location-${violation.ruleId}-${violation.locationIndex}`);
+                        if (originalCheckbox) {
+                            // Синхронизируем начальное состояние
+                            checkbox.checked = originalCheckbox.checked;
                             
-                            // Вызываем функцию маркировки локации
-                            markLocationAsFixed(location.ruleId, location.locationIndex, this.checked);
-                            
-                            // Обновляем внешний вид параграфа
-                            if (this.checked) {
-                                violationItem.classList.add('fixed');
-                            } else {
-                                violationItem.classList.remove('fixed');
-                            }
-                        });
-                    }
+                            // Добавляем обработчик для синхронизации
+                            checkbox.addEventListener('change', function() {
+                                // Обновляем оригинальный чекбокс
+                                originalCheckbox.checked = this.checked;
+                                
+                                // Вызываем функцию маркировки локации
+                                markLocationAsFixed(violation.ruleId, violation.locationIndex, this.checked);
+                                
+                                // Обновляем внешний вид параграфа
+                                if (this.checked) {
+                                    violationItem.classList.add('fixed');
+                                } else {
+                                    violationItem.classList.remove('fixed');
+                                }
+                            });
+                        }
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = checkbox.id;
+                        label.textContent = 'Исправлено';
+                        
+                        checkboxContainer.appendChild(checkbox);
+                        checkboxContainer.appendChild(label);
+                        
+                        // Создаем описание нарушения
+                        const violationDescription = document.createElement('div');
+                        violationDescription.className = 'paragraph-violation-description';
+                        violationDescription.textContent = violation.ruleName;
+                        
+                        violationItem.appendChild(checkboxContainer);
+                        violationItem.appendChild(violationDescription);
+                        
+                        violationsList.appendChild(violationItem);
+                    });
                     
-                    const label = document.createElement('label');
-                    label.htmlFor = checkbox.id;
-                    label.textContent = 'Исправлено';
-                    
-                    checkboxContainer.appendChild(checkbox);
-                    checkboxContainer.appendChild(label);
-                    
-                    // Создаем описание нарушения
-                    const violationDescription = document.createElement('div');
-                    violationDescription.className = 'paragraph-violation-description';
-                    violationDescription.textContent = location.ruleName;
-                    
-                    violationItem.appendChild(checkboxContainer);
-                    violationItem.appendChild(violationDescription);
-                    
-                    violationsList.appendChild(violationItem);
-                });
+                    paragraphContainer.appendChild(violationsList);
+                }
                 
-                paragraphContainer.appendChild(violationsList);
                 documentView.appendChild(paragraphContainer);
             });
         } else {
-            // Если нет локаций, показываем сообщение
+            // Если нет параграфов с нарушениями, показываем сообщение
             const noLocationsMessage = document.createElement('p');
             noLocationsMessage.textContent = 'Нет доступных параграфов с нарушениями.';
             noLocationsMessage.className = 'no-locations-message';
             documentView.appendChild(noLocationsMessage);
         }
         
-        // Находим .document-details и вставляем документо-ориентированное ��редставление
+        // Вставляем представление в документ
         const documentDetails = card.querySelector('.document-details');
         if (documentDetails) {
-            // Вставляем после первого дочернего элемента (документ-пути)
             const firstChild = documentDetails.querySelector('.document-path');
             if (firstChild) {
                 firstChild.insertAdjacentElement('afterend', documentView);
@@ -2590,7 +2620,6 @@ function initializeDocumentOrientedView() {
         }
     });
 }
-
 // Вызываем функцию при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     initializeDocumentOrientedView();
