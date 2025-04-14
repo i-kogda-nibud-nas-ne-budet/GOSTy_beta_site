@@ -1,11 +1,10 @@
-
 /**
- * check.js - Скрипт для страницы проверки документов GOSTY
- * Python 3.13 типизация учтена в комментариях для будущей интеграции с Python
+ * check.js - Обработчик для страницы проверки документов
+ * Отвечает за загрузку, валидацию и отправку файлов на проверку
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM загружен, инициализация скриптов...');
+    console.log('Инициализация check.js');
     
     // Инициализация плавающих элементов
     addFloatingElements();
@@ -13,19 +12,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Кнопка "Наверх"
     setupBackToTopButton();
     
-    // Настройка выбора категории пользователя
-    setupCategorySelection();
+    // Настройка выбора категории пользователя (если есть)
+    if (document.querySelector('.select-category')) {
+        setupCategorySelection();
+    }
     
     // Настройка области загрузки файлов
     setupFileUpload();
     
     // Обработка отправки файла
     setupFileSubmission();
-
+    
     // Настройка блока ошибки
     setupErrorHandling();
-    
-    console.log('Инициализация скриптов завершена');
 });
 
 /**
@@ -78,16 +77,14 @@ function setupCategorySelection() {
  * Настраивает область загрузки файлов
  * @returns {void}
  */
+
 function setupFileUpload() {
-    console.log('Настройка области загрузки файлов...');
-    
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
     const selectedFile = document.getElementById('selected-file');
     const fileName = document.getElementById('file-name');
     
-    // Выводим информацию об элементах для отладки
-    console.log('Элементы для загрузки файлов:');
+    console.log('Настройка области загрузки файлов с drag-and-drop');
     console.log('- dropZone:', dropZone);
     console.log('- fileInput:', fileInput);
     console.log('- selectedFile:', selectedFile);
@@ -100,46 +97,15 @@ function setupFileUpload() {
     
     // Клик по зоне загрузки открывает диалог выбора файла
     dropZone.addEventListener('click', function() {
-        console.log('Клик по зоне загрузки, открываем диалог выбора файла');
+        console.log('Клик по зоне загрузки, открываем д��алог выбора файла');
         fileInput.click();
     });
     
-    // Предотвращение стандартного поведения при перетаскивании
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-    });
-    
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    
-    // Подсветка при перетаскивании
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, function() {
-            console.log(`Событие ${eventName}: добавляем подсветку`);
-            dropZone.classList.add('highlight');
-        }, false);
-    });
-    
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, function() {
-            console.log(`Событие ${eventName}: убираем подсветку`);
-            dropZone.classList.remove('highlight');
-        }, false);
-    });
-    
-    // Обработка брошенного файла
-    dropZone.addEventListener('drop', function(e) {
-        console.log('Файл перетащен в зону загрузки');
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        
-        if (files.length) {
-            console.log(`Получен файл через drag&drop: ${files[0].name}`);
-            handleFile(files[0]);
-        }
-    }, false);
+    // Обработка перетаскивания файлов
+    dropZone.addEventListener('dragenter', handleDragEnter, false);
+    dropZone.addEventListener('dragover', handleDragOver, false);
+    dropZone.addEventListener('dragleave', handleDragLeave, false);
+    dropZone.addEventListener('drop', handleDrop, false);
     
     // Обработка выбранного файла через диалог
     fileInput.addEventListener('change', function(e) {
@@ -151,6 +117,56 @@ function setupFileUpload() {
             console.warn('Файл не выбран или событие сработало некорректно');
         }
     });
+    
+    // Предотвращает стандартное поведение браузера при перетаскивании
+    function handleDragEnter(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Событие dragenter: добавляем подсветку');
+        dropZone.classList.add('highlight');
+    }
+    
+    // Предотвращает стандартное поведение браузера при перетаскивании
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Важно! Нужно установить dropEffect
+        e.dataTransfer.dropEffect = 'copy';
+        console.log('Событие dragover: поддерживаем подсветку');
+        dropZone.classList.add('highlight');
+        return false;
+    }
+    
+    // Убирает подсветку при выходе из зоны
+    function handleDragLeave(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Событие dragleave: убираем подсветку');
+        dropZone.classList.remove('highlight');
+    }
+    
+    // Обрабатывает событие сброса файла
+    function handleDrop(e) {
+        console.log('Событие drop: файл перетащен в зону загрузки');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        dropZone.classList.remove('highlight');
+        
+        const dt = e.dataTransfer;
+        if (!dt || !dt.files || !dt.files.length) {
+            console.warn('Нет перетаскиваемых файлов в событии drop');
+            return;
+        }
+        
+        const file = dt.files[0];
+        console.log(`Получен файл через drag&drop: ${file.name}`);
+        
+        // Обрабатываем полученный файл
+        handleFile(file);
+        
+        return false;
+    }
     
     /**
      * Обрабатывает загруженный файл
@@ -188,7 +204,6 @@ function setupFileUpload() {
         console.log('Файл сохранен в window.uploadedFile');
     }
 }
-
 /**
  * Настраивает отправку файла
  * @returns {void}
@@ -214,7 +229,7 @@ function setupFileSubmission() {
     }
     
     submitButton.addEventListener('click', function() {
-        console.log('Нажата кнопка отправки файла');
+        console.log('Нажата кнопка отправк�� файла');
         
         if (!window.uploadedFile) {
             console.warn('Не выбран файл для отправки');
@@ -234,6 +249,7 @@ function setupFileSubmission() {
     });
 }
 
+
 /**
  * Отправляет файл на сервер для проверки
  * @param {File} file - Файл для отправки
@@ -242,9 +258,21 @@ function setupFileSubmission() {
 function sendFileToServer(file) {
     console.log(`Отправка файла на сервер: ${file.name}`);
     
+    // Получаем ссылки на блоки UI для управления интерфейсом
+    const uploadBlock = document.getElementById('upload-block');
+    const processingBlock = document.getElementById('processing-block');
+    const errorBlock = document.getElementById('error-block');
+    
     // Создание FormData для отправки файла
     const formData = new FormData();
-    formData.append('file', file);
+    
+    // ВАЖНОЕ ИЗМЕНЕНИЕ: имя параметра должно быть 'document', а не 'file'
+    formData.append('document', file);
+    
+    // Добавляем дополнительные параметры для API
+    formData.append('full_report', 'true');
+    formData.append('document_oriented', 'true');
+    formData.append('return_html', 'true'); // Запрашиваем HTML-отчет напрямую
     
     // API endpoint для валидации
     const apiUrl = 'http://127.0.0.1:8000/api/documents/validate-anonymous';
@@ -252,6 +280,7 @@ function sendFileToServer(file) {
     
     // Отправка файла на сервер
     console.log('Выполнение fetch запроса...');
+    
     fetch(apiUrl, {
         method: 'POST',
         body: formData
@@ -268,62 +297,102 @@ function sendFileToServer(file) {
         const contentType = response.headers.get('content-type');
         console.log(`Тип содержимого ответа: ${contentType}`);
         
-        // Если сервер возвращает файл (не JSON)
-        if (contentType && (
+        // Если сервер возвращает HTML
+        if (contentType && contentType.includes('text/html')) {
+            console.log('Сервер вернул HTML, обрабатываем как отчет');
+            return response.text().then(html => {
+                return { isHtml: true, html: html };
+            });
+        }
+        // Если сервер возвращает файл (не JSON и не HTML)
+        else if (contentType && (
             contentType.includes('application/octet-stream') || 
             contentType.includes('application/pdf') || 
             contentType.includes('application/vnd.openxmlformats') ||
             contentType.includes('application/msword')
         )) {
             console.log('Сервер вернул файл, обрабатываем как бинарные данные');
-            // Обрабатываем файл
             return response.blob().then(blob => {
                 return { isFile: true, blob: blob, contentType: contentType };
             });
-        } else {
-            console.log('Сервер вернул JSON, парсим ответ');
-            // Обрабатываем JSON-ответ
-            return response.json().then(data => {
-                return { isFile: false, data: data };
-            }).catch(error => {
-                console.error('Ошибка при парсинге JSON:', error);
-                // Попробуем получить текст ответа
-                return response.text().then(text => {
-                    console.log('Содержимое ответа:', text);
-                    throw new Error('Неверный формат JSON в ответе сервера');
-                });
+        } 
+        // В остальных случаях обрабатываем как JSON или текст
+        else {
+            console.log('Сервер вернул JSON или текст, парсим ответ');
+            return response.text().then(text => {
+                console.log('Полученный текст ответа:', text.substring(0, 200) + '...');
+                try {
+                    // Пробуем парсить как JSON
+                    const jsonData = JSON.parse(text);
+                    console.log('Данные успешно распарсены как JSON:', jsonData);
+                    return { isFile: false, data: jsonData };
+                } catch (err) {
+                    // Это не JSON, возможно это HTML
+                    console.warn('Не удалось распарсить ответ как JSON:', err);
+                    
+                    // Проверяем, похоже ли это на HTML
+                    if (text.trim().startsWith('<') && text.includes('</html>')) {
+                        console.log('Текст похож на HTML, обрабатываем как отчет');
+                        return { isHtml: true, html: text };
+                    }
+                    
+                    return { isFile: false, text: text };
+                }
             });
         }
     })
     .then(result => {
-        console.log('Успешный ответ:', result);
+        console.log('Обработка результата:', result);
         
         // Скрываем блок обработки
-        const processingBlock = document.getElementById('processing-block');
         if (processingBlock) {
             processingBlock.style.display = 'none';
         }
         
-        if (result.isFile) {
+        // Если получен HTML отчет напрямую
+        if (result.isHtml && result.html) {
+            console.log('Получен HTML-отчет напрямую, отображаем');
+            displayHtmlReport(result.html);
+            showNotification('Успех', 'Документ проверен. Отчет открыт.', 'success');
+            return;
+        }
+        // Если сервер вернул файл
+        else if (result.isFile) {
             // Если сервер вернул файл - скачиваем его
             console.log('Скачивание файла...');
             downloadFile(result.blob, getFileName(file.name, result.contentType));
             showNotification('Успех', 'Файл успешно проверен и скачан.', 'success');
             
             // Показываем блок загрузки для новой проверки
-            const uploadBlock = document.getElementById('upload-block');
             if (uploadBlock) {
                 uploadBlock.style.display = 'block';
             }
             
             // Сбрасываем загруженный файл
             resetUploadedFile();
-        } else {
+        } 
+        // Если получен JSON ответ
+        else if (result.data) {
             const data = result.data;
             console.log('Обработка JSON-ответа:', data);
             
+            // Если есть html_report или html-report, отображаем его
+            if (data.html_report || data['html-report']) {
+                console.log('Получен HTML-отчет в JSON, отображаем его пользователю');
+                
+                // Получаем HTML-код отчета (учитываем возможные варианты именования)
+                const htmlReport = data.html_report || data['html-report'];
+                
+                // Отображаем HTML-отчет
+                displayHtmlReport(htmlReport);
+                
+                showNotification('Успех', 'Документ проверен. Отчет открыт.', 'success');
+                return; // Завершаем обработку, т.к. отчет уже отображен
+            }
+            
+            // Остальная обработка JSON остается без изменений
             // Если в ответе есть fileUrl, открываем файл
-            if (data.fileUrl) {
+            else if (data.fileUrl) {
                 console.log(`Открытие файла по URL: ${data.fileUrl}`);
                 window.open(data.fileUrl, '_blank');
                 showNotification('Успех', 'Файл успешно проверен и открыт.', 'success');
@@ -345,25 +414,88 @@ function sendFileToServer(file) {
                 console.log(`Переход на страницу отчета: report.html?id=${data.reportId}`);
                 window.location.href = `report.html?id=${data.reportId}`;
             } 
-            // Если есть result, но нет fileUrl/fileData/reportId
+            // Если есть result, но нет других ожидаемых полей
             else if (data.result) {
                 console.log('Сохранение результата и переход на страницу примера отчета');
                 localStorage.setItem('validationResult', JSON.stringify(data));
                 window.location.href = 'report-example.html';
-            } 
-            // Если нет ни одного из ожидаемых полей
-            else {
-                console.log('В ответе нет ожидаемых полей');
-                showNotification('Информация', 'Файл успешно проверен, но сервер не вернул данные для отображения.', 'info');
-                resetUploadToStart();
             }
+            // Если есть summary (результаты проверки)
+            else if (data.summary) {
+                console.log('Получен результат проверки с summary:', data);
+                localStorage.setItem('validationResult', JSON.stringify(data));
+                showNotification('Успех', `Документ проверен. Соответствие: ${data.summary.compliance_percentage}%`, 'success');
+                window.location.href = 'report-example.html';
+            }
+            // Если у нас есть какие-то данные, но неизвестной структуры
+            else {
+                console.log('Получен нестандартный ответ от сервера:', data);
+                localStorage.setItem('validationResult', JSON.stringify(data));
+                showNotification('Информация', 'Файл проверен, переход к результатам.', 'info');
+                window.location.href = 'report-example.html';
+            }
+        } 
+        // Если получен просто текст
+        else if (result.text) {
+            console.log('Получен текстовый ответ:', result.text.substring(0, 200) + '...');
+            
+            // Проверяем, похоже ли это на HTML
+            if (result.text.trim().startsWith('<') && result.text.includes('</html>')) {
+                console.log('Текст похож на HTML, отображаем как отчет');
+                displayHtmlReport(result.text);
+                showNotification('Успех', 'Документ проверен. Отчет открыт.', 'success');
+                return;
+            }
+            
+            showNotification('Информация', 'Получен ответ от сервера, но формат ответа не распознан.', 'info');
+            resetUploadToStart();
+        } 
+        // Если получено что-то неизвестное
+        else {
+            console.warn('Получен неизвестный формат результата');
+            showNotification('Информация', 'Файл успешно проверен, но сервер не вернул данные для отображения.', 'info');
+            resetUploadToStart();
         }
     })
     .catch(error => {
         console.error('Ошибка при отправке файла:', error);
         showError(error.message);
     });
+    
+    /**
+     * Сбрасывает интерфейс в начальное состояние
+     */
+    function resetUploadToStart() {
+        console.log('Сброс интерфейса в начальное состояние');
+        if (uploadBlock) uploadBlock.style.display = 'block';
+        if (processingBlock) processingBlock.style.display = 'none';
+        if (errorBlock) errorBlock.style.display = 'none';
+        
+        resetUploadedFile();
+    }
+    
+    /**
+     * Показывает блок с ошибкой и скрывает блок обработки
+     * @param {String} errorMessage - Сообщение об ошибке
+     */
+    function showError(errorMessage) {
+        console.error(`Отображение ошибки: ${errorMessage}`);
+        if (processingBlock) processingBlock.style.display = 'none';
+        
+        if (errorBlock) {
+            errorBlock.style.display = 'block';
+            const errorText = document.getElementById('error-message');
+            if (errorText) {
+                errorText.textContent = errorMessage || 'Произошла ошибка при обработке файла.';
+            }
+        } else {
+            // Если блок ошибки не найден, используем уведомление
+            showNotification('Ошибка', errorMessage || 'Произошла ошибка при обработке файла.', 'error');
+            resetUploadToStart();
+        }
+    }
 }
+
 
 /**
  * Получает имя для скачиваемого файла на основе исходного имени и типа содержимого
@@ -391,7 +523,7 @@ function getFileName(originalName, contentType) {
 /**
  * Скачивает файл
  * @param {Blob} blob - Содержимое файла
- * @param {String} fileName - Имя файла для скачивания
+ * @param {String} fileName - Имя фай��а для скачивания
  */
 function downloadFile(blob, fileName) {
     console.log(`Скачивание файла: ${fileName}, размер: ${blob.size} байт`);
@@ -482,7 +614,7 @@ function downloadFileFromData(data, fileName, fileType) {
 }
 
 /**
- * Сбрасывает состояние загрузки файла
+ * Сбрасывает информацию о загруженном файле
  */
 function resetUploadedFile() {
     console.log('Сброс информации о загруженном файле');
@@ -504,52 +636,353 @@ function resetUploadedFile() {
     }
 }
 
-/**
- * Сбрасывает интерфейс в начальное состояние
- */
-function resetUploadToStart() {
-    console.log('Сброс интерфейса в начальное состояние');
-    const uploadBlock = document.getElementById('upload-block');
-    const processingBlock = document.getElementById('processing-block');
-    const errorBlock = document.getElementById('error-block');
-    
-    if (uploadBlock) uploadBlock.style.display = 'block';
-    if (processingBlock) processingBlock.style.display = 'none';
-    if (errorBlock) errorBlock.style.display = 'none';
-    
-    resetUploadedFile();
-}
 
 /**
- * Показывает блок с ошибкой и скрывает блок обработки
- * @param {String} errorMessage - Сообщение об ошибке
+ * Отображает HTML-отчет пользователю
+ * @param {String} htmlContent - HTML-содержимое отчета
  */
-function showError(errorMessage) {
-    console.error(`Отображение ошибки: ${errorMessage}`);
-    const processingBlock = document.getElementById('processing-block');
-    const errorBlock = document.getElementById('error-block');
-    const errorText = document.getElementById('error-message');
+function displayHtmlReport(htmlContent) {
+    console.log('Отображение HTML-отчета в новом окне');
     
-    if (processingBlock) processingBlock.style.display = 'none';
+    try {
+        // Создаем Blob из HTML-содержимого
+        const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+        
+        // Создаем URL для Blob
+        const blobUrl = window.URL.createObjectURL(htmlBlob);
+        
+        // Открываем URL в новой вкладке браузера
+        console.log('Открываем HTML-отчет в новой вкладке браузера');
+        window.open(blobUrl, '_blank');
+        
+        // Освобождаем ресурсы Blob URL через небольшую задержку
+        // Важно: не освобождаем URL сразу, чтобы браузер успел его открыть
+        setTimeout(() => {
+            window.URL.revokeObjectURL(blobUrl);
+            console.log('Ресурсы Blob URL очищены');
+        }, 1000);
+        
+        // Показываем уведомление об успешной операции
+        showNotification('Успех', 'Документ проверен. Отчет открыт в новой вкладке.', 'success');
+        
+        // Сбрасываем интерфейс в начальное состояние
+        const uploadBlock = document.getElementById('upload-block');
+        const processingBlock = document.getElementById('processing-block');
+        const errorBlock = document.getElementById('error-block');
+        
+        if (processingBlock) processingBlock.style.display = 'none';
+        if (errorBlock) errorBlock.style.display = 'none';
+        if (uploadBlock) uploadBlock.style.display = 'block';
+        
+        // Сбрасываем загруженный файл
+        resetUploadedFile();
+        
+    } catch (error) {
+        console.error('Ошибка при открытии HTML-отчета:', error);
+        showNotification('Ошибка', 'Не удалось открыть отчет: ' + error.message, 'error');
+        
+        // Если произошла ошибка, вернемся к встроенному отображению отчета
+        displayHtmlReportInline(htmlContent);
+    }
+}
+
+
+/**
+ * Отображает HTML-отчет пользователю
+ * @param {String} htmlContent - HTML-содержимое отчета
+ */
+function displayHtmlReport(htmlContent) {
+    console.log('Отображение HTML-отчета со стилями в новом окне');
     
-    if (errorBlock) {
-        errorBlock.style.display = 'block';
-        if (errorText) {
-            errorText.textContent = errorMessage || 'Произошла ошибка при обработке файла.';
-        }
-    } else {
-        // Если блок ошибки не найден, используем уведомление
-        showNotification('Ошибка', errorMessage || 'Произошла ошибка при обработке файла.', 'error');
-        resetUploadToStart();
+    try {
+        // Добавление необходимых стилей к HTML-отчету
+        const htmlWithStyles = addStylesToHtml(htmlContent);
+        
+        // Создаем Blob из HTML-содержимого
+        const htmlBlob = new Blob([htmlWithStyles], { type: 'text/html' });
+        
+        // Создаем URL для Blob
+        const blobUrl = window.URL.createObjectURL(htmlBlob);
+        
+        // Открываем URL в новой вкладке браузера
+        console.log('Открываем HTML-отчет со стилями в новой вкладке браузера');
+        window.open(blobUrl, '_blank');
+        
+        // Освобождаем ресурсы Blob URL через небольшую задержку
+        // Важно: не освобождаем URL сразу, чтобы браузер успел его открыть
+        setTimeout(() => {
+            window.URL.revokeObjectURL(blobUrl);
+            console.log('Ресурсы Blob URL очищены');
+        }, 1000);
+        
+        // Показываем уведомление об успешной операции
+        showNotification('Успех', 'Документ проверен. Отчет открыт в новой вкладке.', 'success');
+        
+        // Сбрасываем интерфейс в начальное состояние
+        const uploadBlock = document.getElementById('upload-block');
+        const processingBlock = document.getElementById('processing-block');
+        const errorBlock = document.getElementById('error-block');
+        
+        if (processingBlock) processingBlock.style.display = 'none';
+        if (errorBlock) errorBlock.style.display = 'none';
+        if (uploadBlock) uploadBlock.style.display = 'block';
+        
+        // Сбрасываем загруженный файл
+        resetUploadedFile();
+        
+    } catch (error) {
+        console.error('Ошибка при открытии HTML-отчета:', error);
+        showNotification('Ошибка', 'Не удалось открыть отчет: ' + error.message, 'error');
+        
+        // Если произошла ошибка, вернемся к встроенному отображению отчета
+        displayHtmlReportInline(htmlContent);
     }
 }
 
 /**
+ * Добавляет необходимые стили к HTML-отчету
+ * @param {String} htmlContent - Исходное HTML-содержимое отчета
+ * @returns {String} - HTML-содержимое со встроенными стилями
+ */
+function addStylesToHtml(htmlContent) {
+    console.log('Добавление стилей к HTML-отчету');
+    
+    // Конфигурация стилей
+    const cssConfig = {
+        // Можно указать абсолютные URL для стилей (CDN, или ваш сервер)
+        externalStylesheets: [
+            // Примеры внешних стилей (раскомментируйте и замените URL)
+            // 'https://your-domain.com/css/styles.css',
+            // 'https://your-domain.com/css/report.css'
+        ],
+        
+        // Пути к локальным CSS файлам относительно страницы
+        localStylesheets: [
+            'css/styles.css',
+            'css/report.css'
+        ],
+        
+        // Встроенные стили (на случай если внешние не загрузятся)
+        inlineStyles: `
+            /* Базовые стили для отчета */
+            body { 
+                font-family: Arial, sans-serif; 
+                line-height: 1.6;
+                margin: 0;
+                padding: 20px;
+                color: #333;
+                background-color: #f9f9f9;
+            }
+            .report-header {
+                background-color: #4A76A8;
+                color: white;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+            }
+            .report-title {
+                margin: 0;
+                font-size: 24px;
+            }
+            .report-section {
+                background-color: white;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .report-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+            }
+            .report-table th, .report-table td {
+                padding: 10px;
+                border: 1px solid #ddd;
+                text-align: left;
+            }
+            .report-table th {
+                background-color: #f2f2f2;
+            }
+            .error-item {
+                background-color: #ffebee;
+                border-left: 4px solid #f44336;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            .warning-item {
+                background-color: #fff8e1;
+                border-left: 4px solid #ffc107;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            .success-item {
+                background-color: #e8f5e9;
+                border-left: 4px solid #4caf50;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+        `
+    };
+    
+    // Если HTML не содержит DOCTYPE или <html>, добавляем их
+    if (!htmlContent.includes('<!DOCTYPE html>')) {
+        console.log('Добавление DOCTYPE к HTML-отчету');
+        htmlContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Отчет о проверке документа</title>\n</head>\n<body>\n' + 
+                      htmlContent + 
+                      '\n</body>\n</html>';
+    }
+    
+    // Определяем, где находится тег <head>
+    let headEndIndex = htmlContent.indexOf('</head>');
+    if (headEndIndex === -1) {
+        // Если <head> не найден, ищем <body> и вставляем <head> перед ним
+        const bodyStartIndex = htmlContent.indexOf('<body');
+        if (bodyStartIndex === -1) {
+            // Если и <body> не найден, добавляем <head> после открывающего <html>
+            const htmlStartIndex = htmlContent.indexOf('<html');
+            if (htmlStartIndex === -1) {
+                // Если совсем ничего нет, просто добавляем в начало
+                htmlContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Отчет о проверке документа</title>\n</head>\n<body>\n' + 
+                              htmlContent + 
+                              '\n</body>\n</html>';
+                headEndIndex = htmlContent.indexOf('</head>');
+            } else {
+                // Вставляем после открывающего <html>
+                const htmlTagEnd = htmlContent.indexOf('>', htmlStartIndex) + 1;
+                htmlContent = htmlContent.substring(0, htmlTagEnd) + 
+                             '\n<head>\n<meta charset="UTF-8">\n<title>Отчет о проверке документа</title>\n</head>\n' + 
+                             htmlContent.substring(htmlTagEnd);
+                headEndIndex = htmlContent.indexOf('</head>');
+            }
+        } else {
+            // Вставляем <head> перед <body>
+            htmlContent = htmlContent.substring(0, bodyStartIndex) + 
+                         '<head>\n<meta charset="UTF-8">\n<title>Отчет о проверке документа</title>\n</head>\n' + 
+                         htmlContent.substring(bodyStartIndex);
+            headEndIndex = htmlContent.indexOf('</head>');
+        }
+    }
+    
+    // Формируем строку с внешними стилями
+    let stylesHtml = '';
+    
+    // Добавляем внешние стили (с абсолютными URL)
+    cssConfig.externalStylesheets.forEach(stylesheetUrl => {
+        stylesHtml += `<link rel="stylesheet" href="${stylesheetUrl}">\n`;
+    });
+    
+    // Добавляем локальные стили (используя BASE_URL из глобальной константы, если она существует)
+    const baseUrl = window.BASE_URL || 'https://xn--j1acbdcdcbnev7j.xn--p1ai/';
+    cssConfig.localStylesheets.forEach(stylesheet => {
+        // Формируем полный URL для стиля
+        const stylesheetUrl = stylesheet.startsWith('http') ? 
+                             stylesheet : 
+                             `${baseUrl}/${stylesheet}`;
+        stylesHtml += `<link rel="stylesheet" href="${stylesheetUrl}">\n`;
+    });
+    
+    // Добавляем встроенные стили
+    stylesHtml += `<style>\n${cssConfig.inlineStyles}\n</style>\n`;
+    
+    // Вставляем стили перед закрывающим тегом </head>
+    htmlContent = htmlContent.substring(0, headEndIndex) + stylesHtml + htmlContent.substring(headEndIndex);
+    
+    // Добавляем базовый URL для относительных ссылок, если это необходимо
+    if (baseUrl) {
+        const baseTag = `<base href="${baseUrl}/">`;
+        htmlContent = htmlContent.replace('<head>', `<head>\n  ${baseTag}`);
+    }
+    
+    console.log('Стили успешно добавлены к HTML-отчету');
+    return htmlContent;
+}
+
+/**
+ * Отображает HTML-отчет встроенным на странице (резервный метод)
+ * @param {String} htmlContent - HTML-содержимое отчета
+ */
+function displayHtmlReportInline(htmlContent) {
+    console.log('Отображение HTML-отчета встроенным на странице (резервный метод)');
+    
+    // Скрываем блоки обработки и загрузки
+    const uploadBlock = document.getElementById('upload-block');
+    const processingBlock = document.getElementById('processing-block');
+    const errorBlock = document.getElementById('error-block');
+    
+    if (uploadBlock) uploadBlock.style.display = 'none';
+    if (processingBlock) processingBlock.style.display = 'none';
+    if (errorBlock) errorBlock.style.display = 'none';
+    
+    // Проверяем существование контейнера для отчета или создаем его
+    let reportContainer = document.getElementById('report-container');
+    
+    if (!reportContainer) {
+        console.log('Создание контейнера для отчета');
+        reportContainer = document.createElement('div');
+        reportContainer.id = 'report-container';
+        reportContainer.className = 'report-container';
+        
+        // Стили для контейнера отчета
+        reportContainer.style.backgroundColor = '#ffffff';
+        reportContainer.style.padding = '20px';
+        reportContainer.style.borderRadius = '8px';
+        reportContainer.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+        reportContainer.style.margin = '20px 0';
+        
+        // Добавляем кнопку "Назад" для возврата к загрузке
+        const backButton = document.createElement('button');
+        backButton.textContent = 'Вернуться к загрузке';
+        backButton.className = 'btn btn-primary mt-3 mb-3';
+        backButton.onclick = function() {
+            reportContainer.style.display = 'none';
+            if (uploadBlock) uploadBlock.style.display = 'block';
+            resetUploadedFile();
+        };
+        
+        // Создаем контейнер для содержимого отчета
+        const reportContent = document.createElement('div');
+        reportContent.id = 'report-content';
+        reportContent.className = 'report-content';
+        
+        // Добавляем элементы в контейнер
+        reportContainer.appendChild(backButton);
+        reportContainer.appendChild(reportContent);
+        
+        // Добавляем контейнер на страницу
+        const mainContainer = document.querySelector('.container') || document.body;
+        mainContainer.appendChild(reportContainer);
+    } else {
+        // Если контейнер уже существует, показываем его
+        reportContainer.style.display = 'block';
+    }
+    
+    // Получаем контейнер для содержимого отчета
+    const reportContent = document.getElementById('report-content');
+    if (!reportContent) {
+        console.error('Не удалось найти контейнер для содержимого отчета');
+        return;
+    }
+    
+    // Устанавливаем HTML-содержимое отчета
+    reportContent.innerHTML = htmlContent;
+    
+    // Прокручиваем страницу к началу отчета
+    reportContainer.scrollIntoView({ behavior: 'smooth' });
+    
+    console.log('HTML-отчет успешно отображен встроенным');
+}
+
+
+/**
  * Настраивает обработку ошибок на странице
+ * @returns {void}
  */
 function setupErrorHandling() {
     console.log('Настройка обработки ошибок');
     const tryAgainButton = document.getElementById('try-again-btn');
+    const uploadBlock = document.getElementById('upload-block');
+    const errorBlock = document.getElementById('error-block');
     
     if (!tryAgainButton) {
         console.warn('Кнопка "Попробовать снова" не найдена');
@@ -558,7 +991,12 @@ function setupErrorHandling() {
     
     tryAgainButton.addEventListener('click', function() {
         console.log('Нажата кнопка "Попробовать снова"');
-        resetUploadToStart();
+        // Скрыть блок ошибки и показать блок загрузки
+        if (errorBlock) errorBlock.style.display = 'none';
+        if (uploadBlock) uploadBlock.style.display = 'block';
+        
+        // Сбросить загруженный файл
+        resetUploadedFile();
     });
 }
 
@@ -644,7 +1082,113 @@ function showNotification(title, message, type = 'info') {
     if (typeof window.showNotification === 'function') {
         window.showNotification(title, message, type);
     } else {
-        // Если внешней функции нет, используем alert
-        alert(`${title}: ${message}`);
+        // Если внешней функции нет, создаем и показываем уведомление внутри страницы
+        createInlineNotification(title, message, type);
+    }
+}
+
+/**
+ * Создает и показывает уведомление внутри страницы
+ * @param {string} title - Заголовок уведомления
+ * @param {string} message - Текст уведомления
+ * @param {string} type - Тип уведомления (success, error, warning, info)
+ * @returns {void}
+ */
+function createInlineNotification(title, message, type = 'info') {
+    // Создаем контейнер для уведомлений, если его нет
+    let notificationContainer = document.getElementById('notification-container');
+    
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notification-container';
+        notificationContainer.style.position = 'fixed';
+        notificationContainer.style.top = '20px';
+        notificationContainer.style.right = '20px';
+        notificationContainer.style.maxWidth = '350px';
+        notificationContainer.style.zIndex = '1000';
+        document.body.appendChild(notificationContainer);
+    }
+    
+    // Создаем уведомление
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.backgroundColor = getBackgroundColorByType(type);
+    notification.style.color = '#fff';
+    notification.style.padding = '15px';
+    notification.style.marginBottom = '10px';
+    notification.style.borderRadius = '5px';
+    notification.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(50px)';
+    notification.style.transition = 'opacity 0.3s, transform 0.3s';
+    
+    // Создаем заголовок
+    const titleElement = document.createElement('h4');
+    titleElement.textContent = title;
+    titleElement.style.margin = '0 0 5px 0';
+    
+    // Создаем текст
+    const messageElement = document.createElement('p');
+    messageElement.textContent = message;
+    messageElement.style.margin = '0';
+    
+    // Добавляем кнопку закрытия
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '×';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '5px';
+    closeButton.style.right = '10px';
+    closeButton.style.background = 'none';
+    closeButton.style.border = 'none';
+    closeButton.style.color = '#fff';
+    closeButton.style.fontSize = '20px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.fontWeight = 'bold';
+    closeButton.onclick = function() {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(50px)';
+        setTimeout(() => {
+            notificationContainer.removeChild(notification);
+        }, 300);
+    };
+    
+    // Собираем уведомление
+    notification.appendChild(titleElement);
+    notification.appendChild(messageElement);
+    notification.appendChild(closeButton);
+    
+    // Добавляем уведомление на страницу
+    notificationContainer.appendChild(notification);
+    
+    // Анимируем появление
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Автоматически скрываем через 5 секунд
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(50px)';
+        setTimeout(() => {
+            if (notification.parentNode === notificationContainer) {
+                notificationContainer.removeChild(notification);
+            }
+        }, 300);
+    }, 5000);
+    
+    /**
+     * Возвращает цвет фона в зависимости от типа уведомления
+     * @param {string} type - Тип уведомления
+     * @returns {string} - CSS-цвет
+     */
+    function getBackgroundColorByType(type) {
+        switch (type) {
+            case 'success': return '#28a745';
+            case 'error': return '#dc3545';
+            case 'warning': return '#ffc107';
+            case 'info':
+            default: return '#17a2b8';
+        }
     }
 }
