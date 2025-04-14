@@ -1237,6 +1237,7 @@ function loadFixedLocations() {
         console.error('Ошибка при загрузке исправленных местоположений:', error);
     }
 }
+
 /**
  * Синхронизирует состояние чекбоксов между правило-ориентированным и документо-ориентированным представлениями
  * @param {string} ruleId - ID правила
@@ -1244,6 +1245,8 @@ function loadFixedLocations() {
  * @param {boolean} isFixed - Состояние чекбокса (включен/выключен)
  */
 function syncCheckboxes(ruleId, locationIndex, isFixed) {
+    console.log(`Синхронизация чекбоксов для правила ${ruleId}, локации ${locationIndex}, состояние: ${isFixed}`);
+    
     // Обновляем чекбокс локации в правило-ориентированном представлении
     const ruleLocationCheckbox = document.getElementById(`fix-location-${ruleId}-${locationIndex}`);
     if (ruleLocationCheckbox && ruleLocationCheckbox.checked !== isFixed) {
@@ -1258,10 +1261,18 @@ function syncCheckboxes(ruleId, locationIndex, isFixed) {
                 locationItem.classList.remove('fixed');
             }
         }
+    } else if (!ruleLocationCheckbox) {
+        console.warn(`Чекбокс локации не найден: fix-location-${ruleId}-${locationIndex}`);
     }
     
     // Обновляем чекбокс в документо-ориентированном представлении
+    // Находим все чекбоксы параграфов для данного правила и локации
     const paragraphCheckboxes = document.querySelectorAll(`.paragraph-fix-checkbox[data-rule-id="${ruleId}"][data-location-index="${locationIndex}"]`);
+    
+    if (paragraphCheckboxes.length === 0) {
+        console.warn(`Чекбоксы параграфов не найдены для правила ${ruleId}, локации ${locationIndex}`);
+    }
+    
     paragraphCheckboxes.forEach(checkbox => {
         if (checkbox.checked !== isFixed) {
             checkbox.checked = isFixed;
@@ -1282,14 +1293,20 @@ function syncCheckboxes(ruleId, locationIndex, isFixed) {
     updateRuleFixedStateBasedOnLocations(ruleId);
 }
 
- /**
- * Модифицированная функция markLocationAsFixed для синхронизации чекбоксов
+/**
+ * Отмечает локацию правила как исправленную/неисправленную
  * @param {string} ruleId - ID правила
  * @param {number|string} locationIndex - Индекс локации
  * @param {boolean} isFixed - Флаг, указывающий исправлена ли локация
  */
 function markLocationAsFixed(ruleId, locationIndex, isFixed = true) {
     console.log(`Marking location ${locationIndex} of rule ${ruleId} as ${isFixed ? 'fixed' : 'not fixed'}`);
+    
+    // Проверка входных данных
+    if (!ruleId) {
+        console.error('Ошибка: ID правила не указан');
+        return;
+    }
     
     // Синхронизируем состояние чекбоксов
     syncCheckboxes(ruleId, locationIndex, isFixed);
@@ -1299,7 +1316,19 @@ function markLocationAsFixed(ruleId, locationIndex, isFixed = true) {
     
     // Обновляем общий прогресс
     updateComplianceProgress();
+    
+    // Сохраняем состояние в localStorage для персистентности
+    try {
+        const locationKey = `${ruleId}-${locationIndex}`;
+        const fixedLocations = JSON.parse(localStorage.getItem('fixedLocations') || '{}');
+        fixedLocations[locationKey] = isFixed;
+        localStorage.setItem('fixedLocations', JSON.stringify(fixedLocations));
+    } catch (error) {
+        console.warn('Не удалось сохранить состояние в localStorage:', error);
+    }
 }
+
+
 /**
  * Обновляет состояние правила на основе состояния его локаций
  * @param {string} ruleId - ID правила
@@ -1337,23 +1366,63 @@ function updateRuleFixedStateBasedOnLocations(ruleId) {
 }
 
 /**
- * Инициализирует обработчики для чекбоксов локаций
+ * Инициализирует обработчики для чекбоксов локаций с улучшенным логированием
  */
 function initializeLocationCheckboxes() {
     // Добавляем обработчики для чекбоксов локаций
     const locationCheckboxes = document.querySelectorAll('.location-fix-checkbox');
     console.log(`Found ${locationCheckboxes.length} location checkboxes`);
     
+    // Логируем все найденные чекбоксы для отладки
+    locationCheckboxes.forEach((checkbox, index) => {
+        const ruleId = checkbox.getAttribute('data-rule-id');
+        const locationIndex = checkbox.getAttribute('data-location-index');
+        console.log(`Checkbox ${index}: rule=${ruleId}, location=${locationIndex}, id=${checkbox.id}`);
+    });
+    
     locationCheckboxes.forEach(checkbox => {
+        // Удаляем существующие обработчики, чтобы избежать дублирования
+        const oldCheckbox = checkbox.cloneNode(true);
+        checkbox.parentNode.replaceChild(oldCheckbox, checkbox);
+        checkbox = oldCheckbox;
+        
         checkbox.addEventListener('change', function() {
             const ruleId = this.getAttribute('data-rule-id');
             const locationIndex = this.getAttribute('data-location-index');
             const isChecked = this.checked;
             
+            console.log(`Location checkbox changed: rule=${ruleId}, location=${locationIndex}, checked=${isChecked}`);
+            
             // Отмечаем локацию как исправленную
             markLocationAsFixed(ruleId, locationIndex, isChecked);
+            
+            // Обновляем соответствующий чекбокс в документо-ориентированном представлении
+            const paragraphCheckboxes = document.querySelectorAll(
+                `.paragraph-fix-checkbox[data-rule-id="${ruleId}"][data-location-index="${locationIndex}"]`
+            );
+            
+            console.log(`Found ${paragraphCheckboxes.length} matching paragraph checkboxes`);
+            
+            paragraphCheckboxes.forEach(paragraphCheckbox => {
+                if (paragraphCheckbox.checked !== isChecked) {
+                    console.log(`Updating paragraph checkbox: ${paragraphCheckbox.id}`);
+                    paragraphCheckbox.checked = isChecked;
+                    
+                    // Обновляем внешний вид элемента
+                    const violationItem = paragraphCheckbox.closest('.paragraph-violation-item');
+                    if (violationItem) {
+                        if (isChecked) {
+                            violationItem.classList.add('fixed');
+                        } else {
+                            violationItem.classList.remove('fixed');
+                        }
+                    }
+                }
+            });
         });
     });
+    
+    console.log('Location checkboxes initialized with improved logging');
 }
 
 // Добавляем вызов функции инициализации при загрузке страницы
@@ -1875,22 +1944,66 @@ function addViewToggleStyles() {
     document.head.appendChild(styleElement);
 }
 
+
 /**
  * Переключение между режимами отображения
  * @param {boolean} isDocumentMode - Флаг, указывающий на режим отображения по документу
  */
 function toggleViewMode(isDocumentMode) {
+    console.log(`Переключение режима отображения на: ${isDocumentMode ? 'по документу' : 'по правилам'}`);
+    
     // Добавляем/удаляем класс для тела документа
     if (isDocumentMode) {
         document.body.classList.add('document-mode');
-        showNotification('Режим отображения по документу включен', 'success');
         
-        // Строим вид, ориентированный на документ
-        buildDocumentOrientedView();
+        // Перестраиваем вид, ориентированный на документ, чтобы обновить все связи
+        initializeDocumentOrientedView();
+        
+        showNotification('Режим отображения по документу включен', 'success');
     } else {
         document.body.classList.remove('document-mode');
         showNotification('Режим отображения по правилам включен', 'success');
     }
+    
+    // Обновляем состояние всех чекбоксов для синхронизации между представлениями
+    updateAllCheckboxesState();
+}
+
+/**
+ * Обновляет состояние всех чекбоксов для синхронизации между представлениями
+ */
+function updateAllCheckboxesState() {
+    // Находим все чекбоксы локаций в правило-ориентированном представлении
+    const locationCheckboxes = document.querySelectorAll('.location-fix-checkbox');
+    
+    locationCheckboxes.forEach(checkbox => {
+        const ruleId = checkbox.getAttribute('data-rule-id');
+        const locationIndex = checkbox.getAttribute('data-location-index');
+        const isChecked = checkbox.checked;
+        
+        if (ruleId && locationIndex !== undefined) {
+            // Синхронизируем с чекбоксами в документо-ориентированном представлении
+            const paragraphCheckboxes = document.querySelectorAll(
+                `.paragraph-fix-checkbox[data-rule-id="${ruleId}"][data-location-index="${locationIndex}"]`
+            );
+            
+            paragraphCheckboxes.forEach(paragraphCheckbox => {
+                paragraphCheckbox.checked = isChecked;
+                
+                // Обновляем внешний вид элемента
+                const violationItem = paragraphCheckbox.closest('.paragraph-violation-item');
+                if (violationItem) {
+                    if (isChecked) {
+                        violationItem.classList.add('fixed');
+                    } else {
+                        violationItem.classList.remove('fixed');
+                    }
+                }
+            });
+        }
+    });
+    
+    console.log('Состояние всех чекбоксов обновлено');
 }
 
 /**
@@ -2400,9 +2513,10 @@ function updateComplianceProgress() {
 }
 /**
  * Инициализация документо-ориентированного вида
+ * Полностью переписанная функция для исправления проблем с индексами
  */
 function initializeDocumentOrientedView() {
-    console.log("Initializing document-oriented view");
+    console.log("Initializing document-oriented view with fixed indexing");
     
     // Находим все карточки документов
     const documentCards = document.querySelectorAll('.document-card');
@@ -2437,13 +2551,27 @@ function initializeDocumentOrientedView() {
             // Получаем все локации для этого правила
             const locations = rule.querySelectorAll('.location-item');
             
-            // Используем Set для отслеживания уже обработанных текстов параграфов для этого правила
-            const processedParagraphs = new Set();
-            
-            locations.forEach((location, locationIndex) => {
+            locations.forEach(location => {
+                // Находим чекбокс локации, чтобы получить правильный индекс
+                const locationCheckbox = location.querySelector('.location-fix-checkbox');
+                if (!locationCheckbox) {
+                    console.warn(`Чекбокс не найден для локации в правиле ${ruleId}`);
+                    return;
+                }
+                
+                // Получаем индекс локации из атрибута data-location-index
+                const locationIndex = locationCheckbox.getAttribute('data-location-index');
+                if (locationIndex === null || locationIndex === undefined) {
+                    console.warn(`Индекс локации не найден для чекбокса в правиле ${ruleId}`);
+                    return;
+                }
+                
                 // Получаем информацию о параграфе
                 const paragraphText = location.querySelector('.location-text')?.textContent;
-                if (!paragraphText) return; // Пропускаем, если нет текста
+                if (!paragraphText) {
+                    console.warn(`Текст параграфа не найден для локации в правиле ${ruleId}`);
+                    return;
+                }
                 
                 const paragraphTypeElement = location.querySelector('.location-type');
                 const paragraphTypeText = paragraphTypeElement ? paragraphTypeElement.textContent : '';
@@ -2465,18 +2593,18 @@ function initializeDocumentOrientedView() {
                 }
                 
                 // Проверяем, не добавляли ли мы уже это правило для этого параграфа
-                // Используем комбинацию текста параграфа и ID правила
-                const processedKey = `${paragraphKey}-${ruleId}`;
+                const existingViolation = paragraphs.get(paragraphKey).violations.find(
+                    v => v.ruleId === ruleId && v.locationIndex === locationIndex
+                );
                 
-                if (!processedParagraphs.has(processedKey)) {
-                    processedParagraphs.add(processedKey);
-                    
-                    // Добавляем информацию о нарушении
+                if (!existingViolation) {
+                    // Добавляем информацию о нарушении с точным индексом
                     paragraphs.get(paragraphKey).violations.push({
                         ruleId: ruleId,
                         ruleName: ruleName,
                         locationIndex: locationIndex,
-                        locationId: `location-${ruleId}-${locationIndex + 1}`
+                        // Используем тот же формат ID, что и в оригинальном чекбоксе
+                        checkboxId: `fix-location-${ruleId}-${locationIndex}`
                     });
                 }
             });
@@ -2525,48 +2653,62 @@ function initializeDocumentOrientedView() {
                     const violationsList = document.createElement('div');
                     violationsList.className = 'paragraph-violations-list';
                     
-                    // Используем Set для отслеживания уникальных имен правил
-                    const uniqueRuleNames = new Set();
-                    const uniqueViolations = [];
-                    
+                    // Группируем нарушения по имени правила
+                    const ruleNameMap = new Map();
                     paragraph.violations.forEach(violation => {
-                        // Добавляем только уникальные имена правил
-                        if (!uniqueRuleNames.has(violation.ruleName)) {
-                            uniqueRuleNames.add(violation.ruleName);
-                            uniqueViolations.push(violation);
+                        if (!ruleNameMap.has(violation.ruleName)) {
+                            ruleNameMap.set(violation.ruleName, []);
                         }
+                        ruleNameMap.get(violation.ruleName).push(violation);
                     });
                     
-                    uniqueViolations.forEach(violation => {
+                    // Создаем элементы для каждого уникального правила
+                    ruleNameMap.forEach((violations, ruleName) => {
                         const violationItem = document.createElement('div');
                         violationItem.className = 'paragraph-violation-item';
-                        violationItem.dataset.ruleId = violation.ruleId;
-                        violationItem.dataset.locationId = violation.locationId;
+                        
+                        // Берем первое нарушение для это��о правила
+                        const firstViolation = violations[0];
+                        violationItem.dataset.ruleId = firstViolation.ruleId;
                         
                         // Создаем чекбокс
                         const checkboxContainer = document.createElement('div');
                         checkboxContainer.className = 'paragraph-checkbox-container';
                         
+                        // Создаем уникальный ID для чекбокса в документо-ориентированном представлении
+                        const checkboxId = `fix-paragraph-${firstViolation.ruleId}-${firstViolation.locationIndex}-${docIndex}`;
+                        
                         const checkbox = document.createElement('input');
                         checkbox.type = 'checkbox';
-                        checkbox.id = `fix-paragraph-${violation.ruleId}-${violation.locationIndex}-${docIndex}`;
+                        checkbox.id = checkboxId;
                         checkbox.className = 'paragraph-fix-checkbox';
-                        checkbox.dataset.ruleId = violation.ruleId;
-                        checkbox.dataset.locationIndex = violation.locationIndex;
+                        checkbox.dataset.ruleId = firstViolation.ruleId;
+                        checkbox.dataset.locationIndex = firstViolation.locationIndex;
                         
-                        // Привязываем чекбокс к существующему чекбоксу локации
-                        const originalCheckbox = document.getElementById(`fix-location-${violation.ruleId}-${violation.locationIndex}`);
+                        // Находим оригинальный чекбокс по его ID
+                        const originalCheckbox = document.getElementById(firstViolation.checkboxId);
+                        
                         if (originalCheckbox) {
+                            console.log(`Найден оригинальный чекбокс ${firstViolation.checkboxId} для параграфа`);
+                            
                             // Синхронизируем начальное состояние
                             checkbox.checked = originalCheckbox.checked;
                             
+                            // Если чекбокс отмечен, добавляем класс fixed
+                            if (checkbox.checked) {
+                                violationItem.classList.add('fixed');
+                            }
+                            
                             // Добавляем обработчик для синхронизации
                             checkbox.addEventListener('change', function() {
+                                console.log(`Изменение чекбокса параграфа ${checkboxId}, новое состояние: ${this.checked}`);
+                                
                                 // Обновляем оригинальный чекбокс
                                 originalCheckbox.checked = this.checked;
                                 
-                                // Вызываем функцию маркировки локации
-                                markLocationAsFixed(violation.ruleId, violation.locationIndex, this.checked);
+                                // Вызываем событие change на оригинальном чекбоксе
+                                const event = new Event('change', { bubbles: true });
+                                originalCheckbox.dispatchEvent(event);
                                 
                                 // Обновляем внешний вид параграфа
                                 if (this.checked) {
@@ -2575,10 +2717,12 @@ function initializeDocumentOrientedView() {
                                     violationItem.classList.remove('fixed');
                                 }
                             });
+                        } else {
+                            console.warn(`Оригинальный чекбокс ${firstViolation.checkboxId} не найден`);
                         }
                         
                         const label = document.createElement('label');
-                        label.htmlFor = checkbox.id;
+                        label.htmlFor = checkboxId;
                         label.textContent = 'Исправлено';
                         
                         checkboxContainer.appendChild(checkbox);
@@ -2587,7 +2731,7 @@ function initializeDocumentOrientedView() {
                         // Создаем описание нарушения
                         const violationDescription = document.createElement('div');
                         violationDescription.className = 'paragraph-violation-description';
-                        violationDescription.textContent = violation.ruleName;
+                        violationDescription.textContent = ruleName;
                         
                         violationItem.appendChild(checkboxContainer);
                         violationItem.appendChild(violationDescription);
@@ -2619,6 +2763,8 @@ function initializeDocumentOrientedView() {
             }
         }
     });
+    
+    console.log("Document-oriented view initialized with fixed indexing");
 }
 // Вызываем функцию при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
