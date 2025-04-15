@@ -871,38 +871,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Инициализация элементов управления
-//function initializeControls() {
-//    // Кнопки управления
-//    document.getElementById('expand-all')?.addEventListener('click', expandAllDocuments);
-//    document.getElementById('collapse-all')?.addEventListener('click', collapseAllDocuments);
-//    document.getElementById('show-only-errors')?.addEventListener('click', showOnlyDocumentsWithErrors);
-//    document.getElementById('show-all')?.addEventListener('click', showAllDocuments);
-//    
-//    // Кнопка печати
-//    document.querySelector('.print-button')?.addEventListener('click', function() {
-//        window.print();
-//    });
-//    
-//    // Кнопка экспорта
-//    document.querySelector('.export-button')?.addEventListener('click', exportFixList);
-//    
-//    // Кнопка "Наверх"
-//    const backToTopButton = document.querySelector('.back-to-top');
-//    if (backToTopButton) {
-//        backToTopButton.addEventListener('click', function() {
-//            window.scrollTo({ top: 0, behavior: 'smooth' });
-//        });
-//        
-//        // Показываем кнопку при прокрутке
-//        window.addEventListener('scroll', function() {
-//            if (window.scrollY > 300) {
-//                backToTopButton.classList.add('visible');
-//            } else {
-//                backToTopButton.classList.remove('visible');
-//            }
-//        });
-//    }
-//}
+function initializeControls() {
+    // Кнопки управления
+    document.getElementById('expand-all')?.addEventListener('click', expandAllDocuments);
+    document.getElementById('collapse-all')?.addEventListener('click', collapseAllDocuments);
+    document.getElementById('show-only-errors')?.addEventListener('click', showOnlyDocumentsWithErrors);
+    document.getElementById('show-all')?.addEventListener('click', showAllDocuments);
+    
+    // Кнопка печати
+    document.querySelector('.print-button')?.addEventListener('click', function() {
+        window.print();
+    });
+    
+    // Кнопка экспорта
+    document.querySelector('.export-button')?.addEventListener('click', exportFixList);
+    
+    // Кнопка "Наверх"
+    const backToTopButton = document.querySelector('.back-to-top');
+    if (backToTopButton) {
+        backToTopButton.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        
+        // Показываем кнопку при прокрутке
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                backToTopButton.classList.add('visible');
+            } else {
+                backToTopButton.classList.remove('visible');
+            }
+        });
+    }
+}
 
 // Переключение видимости документа
 function toggleDocument(documentId) {
