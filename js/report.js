@@ -1016,19 +1016,19 @@ function showNotification(message, type = 'info') {
 }
 
 // Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация кнопок управления
-    document.getElementById('expand-all')?.addEventListener('click', expandAllDocuments);
-    document.getElementById('collapse-all')?.addEventListener('click', collapseAllDocuments);
-    document.getElementById('show-only-errors')?.addEventListener('click', showOnlyDocumentsWithErrors);
-    document.getElementById('show-all')?.addEventListener('click', showAllDocuments);
-    
-    // Инициализация кнопки печати
-    document.querySelector('.print-button')?.addEventListener('click', printReport);
-    
-    // Инициализация кнопки экспорта
-    document.querySelector('.export-button')?.addEventListener('click', exportFixList);
-});
+//document.addEventListener('DOMContentLoaded', function() {
+//    // Инициализация кнопок управления
+//    document.getElementById('expand-all')?.addEventListener('click', expandAllDocuments);
+//    document.getElementById('collapse-all')?.addEventListener('click', collapseAllDocuments);
+//    document.getElementById('show-only-errors')?.addEventListener('click', showOnlyDocumentsWithErrors);
+//    document.getElementById('show-all')?.addEventListener('click', showAllDocuments);
+//    
+//    // Инициализация кнопки печати
+//    document.querySelector('.print-button')?.addEventListener('click', printReport);
+//    
+//    // Инициализация кнопки экспорта
+//    document.querySelector('.export-button')?.addEventListener('click', exportFixList);
+//});
 
 // Развернуть все документы
 function expandAllDocuments() {
