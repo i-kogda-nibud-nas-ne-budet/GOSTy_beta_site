@@ -204,6 +204,8 @@ function setupFileUpload() {
         console.log('Файл сохранен в window.uploadedFile');
     }
 }
+
+
 /**
  * Настраивает отправку файла
  * @returns {void}
@@ -250,6 +252,7 @@ function setupFileSubmission() {
 }
 
 
+
 /**
  * Отправляет файл на сервер для проверки
  * @param {File} file - Файл для отправки
@@ -266,16 +269,15 @@ function sendFileToServer(file) {
     // Создание FormData для отправки файла
     const formData = new FormData();
     
-    // ВАЖНОЕ ИЗМЕНЕНИЕ: имя параметра должно быть 'document', а не 'file'
+    // Имя параметра для api-light должно быть 'document'
     formData.append('document', file);
     
     // Добавляем дополнительные параметры для API
     formData.append('full_report', 'true');
     formData.append('document_oriented', 'true');
-    formData.append('return_html', 'true'); // Запрашиваем HTML-отчет напрямую
     
-    // API endpoint для валидации
-    const apiUrl = 'http://127.0.0.1:8000/api/documents/validate-anonymous';
+    // URL для API-light
+    const apiUrl = 'http://127.0.0.1:8000/api/documents/validate';
     console.log(`URL API: ${apiUrl}`);
     
     // Отправка файла на сервер
@@ -297,163 +299,59 @@ function sendFileToServer(file) {
         const contentType = response.headers.get('content-type');
         console.log(`Тип содержимого ответа: ${contentType}`);
         
-        // Если сервер возвращает HTML
-        if (contentType && contentType.includes('text/html')) {
-            console.log('Сервер вернул HTML, обрабатываем как отчет');
-            return response.text().then(html => {
-                return { isHtml: true, html: html };
-            });
-        }
-        // Если сервер возвращает файл (не JSON и не HTML)
-        else if (contentType && (
-            contentType.includes('application/octet-stream') || 
-            contentType.includes('application/pdf') || 
-            contentType.includes('application/vnd.openxmlformats') ||
-            contentType.includes('application/msword')
-        )) {
-            console.log('Сервер вернул файл, обрабатываем как бинарные данные');
-            return response.blob().then(blob => {
-                return { isFile: true, blob: blob, contentType: contentType };
-            });
-        } 
-        // В остальных случаях обрабатываем как JSON или текст
-        else {
-            console.log('Сервер вернул JSON или текст, парсим ответ');
-            return response.text().then(text => {
-                console.log('Полученный текст ответа:', text.substring(0, 200) + '...');
-                try {
-                    // Пробуем парсить как JSON
-                    const jsonData = JSON.parse(text);
-                    console.log('Данные успешно распарсены как JSON:', jsonData);
-                    return { isFile: false, data: jsonData };
-                } catch (err) {
-                    // Это не JSON, возможно это HTML
-                    console.warn('Не удалось распарсить ответ как JSON:', err);
-                    
-                    // Проверяем, похоже ли это на HTML
-                    if (text.trim().startsWith('<') && text.includes('</html>')) {
-                        console.log('Текст похож на HTML, обрабатываем как отчет');
-                        return { isHtml: true, html: text };
-                    }
-                    
-                    return { isFile: false, text: text };
-                }
-            });
-        }
+        // В api-light ответ всегда JSON
+        return response.json();
     })
-    .then(result => {
-        console.log('Обработка результата:', result);
+    .then(data => {
+        console.log('Получены данные от API:', data);
         
         // Скрываем блок обработки
         if (processingBlock) {
             processingBlock.style.display = 'none';
         }
         
-        // Если получен HTML отчет напрямую
-        if (result.isHtml && result.html) {
-            console.log('Получен HTML-отчет напрямую, отображаем');
-            displayHtmlReport(result.html);
-            showNotification('Успех', 'Документ проверен. Отчет открыт.', 'success');
-            return;
-        }
-        // Если сервер вернул файл
-        else if (result.isFile) {
-            // Если сервер вернул файл - скачиваем его
-            console.log('Скачивание файла...');
-            downloadFile(result.blob, getFileName(file.name, result.contentType));
-            showNotification('Успех', 'Файл успешно проверен и скачан.', 'success');
+        // API-light всегда возвращает document_id и report_url в JSON-ответе
+        if (data.document_id && data.report_url) {
+            console.log(`Получен report_url: ${data.report_url}`);
             
-            // Показываем блок загрузки для новой проверки
-            if (uploadBlock) {
-                uploadBlock.style.display = 'block';
-            }
+            // Формируем полный URL отчета
+            const fullReportUrl = `http://127.0.0.1:8000${data.report_url}`;
             
-            // Сбрасываем загруженный файл
-            resetUploadedFile();
-        } 
-        // Если получен JSON ответ
-        else if (result.data) {
-            const data = result.data;
-            console.log('Обработка JSON-ответа:', data);
+            // Сохраняем результат валидации в localStorage
+            localStorage.setItem('validationResult', JSON.stringify(data));
             
-            // Если есть html_report или html-report, отображаем его
-            if (data.html_report || data['html-report']) {
-                console.log('Получен HTML-отчет в JSON, отображаем его пользователю');
-                
-                // Получаем HTML-код отчета (учитываем возможные варианты именования)
-                const htmlReport = data.html_report || data['html-report'];
-                
-                // Отображаем HTML-отчет
-                displayHtmlReport(htmlReport);
-                
-                showNotification('Успех', 'Документ проверен. Отчет открыт.', 'success');
-                return; // Завершаем обработку, т.к. отчет уже отображен
-            }
+            // Открываем отчет в новой вкладке
+            window.open(fullReportUrl, '_blank');
             
-            // Остальная обработка JSON остается без изменений
-            // Если в ответе есть fileUrl, открываем файл
-            else if (data.fileUrl) {
-                console.log(`Открытие файла по URL: ${data.fileUrl}`);
-                window.open(data.fileUrl, '_blank');
-                showNotification('Успех', 'Файл успешно проверен и открыт.', 'success');
-                resetUploadToStart();
-            }
-            // Если в ответе есть fileData (base64), скачиваем файл
-            else if (data.fileData) {
-                console.log('Скачивание файла из base64 данных');
-                downloadFileFromData(
-                    data.fileData, 
-                    data.fileName || 'downloaded_file', 
-                    data.fileType || 'application/octet-stream'
-                );
-                showNotification('Успех', 'Файл успешно проверен и скачан.', 'success');
-                resetUploadToStart();
-            }
-            // Если есть reportId, переходим на страницу отчета
-            else if (data.reportId) {
-                console.log(`Переход на страницу отчета: report.html?id=${data.reportId}`);
-                window.location.href = `report.html?id=${data.reportId}`;
-            } 
-            // Если есть result, но нет других ожидаемых полей
-            else if (data.result) {
-                console.log('Сохранение результата и переход на страницу примера отчета');
-                localStorage.setItem('validationResult', JSON.stringify(data));
-                window.location.href = 'report-example.html';
-            }
-            // Если есть summary (результаты проверки)
-            else if (data.summary) {
-                console.log('Получен результат проверки с summary:', data);
-                localStorage.setItem('validationResult', JSON.stringify(data));
-                showNotification('Успех', `Документ проверен. Соответствие: ${data.summary.compliance_percentage}%`, 'success');
-                window.location.href = 'report-example.html';
-            }
-            // Если у нас есть какие-то данные, но неизвестной структуры
-            else {
-                console.log('Получен нестандартный ответ от сервера:', data);
-                localStorage.setItem('validationResult', JSON.stringify(data));
-                showNotification('Информация', 'Файл проверен, переход к результатам.', 'info');
-                window.location.href = 'report-example.html';
-            }
-        } 
-        // Если получен просто текст
-        else if (result.text) {
-            console.log('Получен текстовый ответ:', result.text.substring(0, 200) + '...');
+            // Показываем уведомление
+            showNotification('Успех', `Документ проверен. Соответствие: ${data.summary.compliance_percentage.toFixed(2)}%`, 'success');
             
-            // Проверяем, похоже ли это на HTML
-            if (result.text.trim().startsWith('<') && result.text.includes('</html>')) {
-                console.log('Текст похож на HTML, отображаем как отчет');
-                displayHtmlReport(result.text);
-                showNotification('Успех', 'Документ проверен. Отчет открыт.', 'success');
-                return;
-            }
-            
-            showNotification('Информация', 'Получен ответ от сервера, но формат ответа не распознан.', 'info');
+            // Возвращаем интерфейс в исходное состояние
             resetUploadToStart();
         } 
-        // Если получено что-то неизвестное
+        // Если у нас есть только информация о проверке, но нет URL отчета
+        else if (data.summary) {
+            console.log('Получен результат проверки без URL отчета:', data);
+            
+            // Сохраняем результат и генерируем HTML-отчет на клиенте
+            localStorage.setItem('validationResult', JSON.stringify(data));
+            
+            // Создаем HTML-отчет на основе данных
+            const htmlReport = generateHtmlReport(data);
+            
+            // Отображаем отчет
+            displayHtmlReport(htmlReport);
+            
+            // Показываем уведомление
+            showNotification('Успех', `Документ проверен. Соответствие: ${data.summary.compliance_percentage.toFixed(2)}%`, 'success');
+            
+            // Возвращаем интерфейс в исходное состояние
+            resetUploadToStart();
+        }
+        // Неизвестный формат ответа
         else {
-            console.warn('Получен неизвестный формат результата');
-            showNotification('Информация', 'Файл успешно проверен, но сервер не вернул данные для отображения.', 'info');
+            console.warn('Получен неизвестный формат ответа:', data);
+            showNotification('Информация', 'Получен ответ от сервера, но формат данных не распознан.', 'info');
             resetUploadToStart();
         }
     })
@@ -494,7 +392,138 @@ function sendFileToServer(file) {
             resetUploadToStart();
         }
     }
+    
+    /**
+     * Генерирует HTML-отчет на основе данных
+     * @param {Object} data - Данные проверки документа
+     * @returns {String} - HTML-отчет
+     */
+    function generateHtmlReport(data) {
+        console.log('Генерация HTML-отчета на основе данных:', data);
+        
+        // Формируем HTML-отчет
+        let html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Отчет о проверке документа: ${data.filename}</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    line-height: 1.6;
+                    margin: 0;
+                    padding: 20px;
+                    color: #333;
+                    background-color: #f9f9f9;
+                }
+                .header {
+                    background-color: #4A76A8;
+                    color: white;
+                    padding: 15px;
+                    border-radius: 5px;
+                    margin-bottom: 20px;
+                }
+                .summary {
+                    background-color: white;
+                    border-radius: 5px;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                .rules {
+                    background-color: white;
+                    border-radius: 5px;
+                    padding: 15px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                h1, h2, h3 {
+                    margin-top: 0;
+                }
+                .error {
+                    background-color: #ffebee;
+                    border-left: 4px solid #f44336;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                }
+                .warning {
+                    background-color: #fff8e1;
+                    border-left: 4px solid #ffc107;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                }
+                .info {
+                    background-color: #e8f5e9;
+                    border-left: 4px solid #4caf50;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                }
+                .progress-bar {
+                    height: 20px;
+                    background-color: #e0e0e0;
+                    border-radius: 10px;
+                    margin: 15px 0;
+                    overflow: hidden;
+                }
+                .progress-fill {
+                    height: 100%;
+                    background-color: #4CAF50;
+                    border-radius: 10px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Отчет о проверке документа</h1>
+                <p>Файл: ${data.filename}</p>
+                <p>Дата проверки: ${new Date(data.validation_date || Date.now()).toLocaleString()}</p>
+            </div>
+            
+            <div class="summary">
+                <h2>Общая информация</h2>
+                <p>Соответствие стандартам: ${data.summary.compliance_percentage.toFixed(2)}%</p>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${data.summary.compliance_percentage}%"></div>
+                </div>
+                
+                <p>Всего правил: ${data.summary.total_rules}</p>
+                <p>Пройдено правил: ${data.summary.passed_rules}</p>
+                <p>Не пройдено правил: ${data.summary.failed_rules}</p>
+            </div>
+            
+            <div class="rules">
+                <h2>Результаты проверки</h2>
+        `;
+        
+        // Сортируем элементы по типу (сначала ошибки, потом предупреждения, потом информация)
+        const sortedItems = [...data.items].sort((a, b) => {
+            const severityOrder = { 'error': 0, 'warning': 1, 'info': 2 };
+            return severityOrder[a.severity] - severityOrder[b.severity];
+        });
+        
+        // Добавляем информацию о каждом правиле
+        sortedItems.forEach(item => {
+            html += `
+                <div class="${item.severity}">
+                    <h3>${item.rule_name}</h3>
+                    <p>${item.description}</p>
+                    ${item.location ? `<p><strong>Расположение:</strong> ${item.location}</p>` : ''}
+                </div>
+            `;
+        });
+        
+        // Закрываем HTML
+        html += `
+            </div>
+        </body>
+        </html>
+        `;
+        
+        return html;
+    }
 }
+
 
 
 /**
