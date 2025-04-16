@@ -41,7 +41,7 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
   position: relative;
@@ -156,7 +156,7 @@ header::before {
 
 .statistics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 1.5rem;
 }
 
@@ -4761,4 +4761,405 @@ footer p {
 
 .passed-rules-list .rule-item:hover {
   background-color: rgba(46, 204, 113, 0.2);
+}
+
+/* Стилизация шапки */
+header {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px var(--shadow-color);
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: var(--primary-gradient);
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo h1 {
+  margin: 0;
+  padding: 0;
+  font-size: 2rem;
+  left: 0;
+  transform: none;
+  display: block;
+}
+
+.logo h1::after {
+  display: none;
+}
+
+.logo p {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+}
+
+nav ul li {
+  margin-left: 1.5rem;
+}
+
+nav ul li a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all var(--transition-speed);
+}
+
+nav ul li a:hover {
+  color: var(--light-blue);
+}
+
+nav ul li a.active {
+  color: var(--light-blue);
+  position: relative;
+}
+
+nav ul li a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary-gradient);
+  border-radius: 2px;
+}
+
+/* Стилизация шапки */
+header {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px var(--shadow-color);
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: var(--primary-gradient);
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo h1 {
+  margin: 0;
+  padding: 0;
+  font-size: 2rem;
+  left: 0;
+  transform: none;
+  display: block;
+}
+
+.logo h1::after {
+  display: none;
+}
+
+.logo p {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+}
+
+nav ul li {
+  margin-left: 1.5rem;
+}
+
+nav ul li a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all var(--transition-speed);
+}
+
+nav ul li a:hover {
+  color: var(--light-blue);
+}
+
+nav ul li a.active {
+  color: var(--light-blue);
+  position: relative;
+}
+
+nav ul li a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary-gradient);
+  border-radius: 2px;
+}
+
+
+
+
+
+
+
+/* Стили для кнопки копирования */
+.copy-button {
+  display: block !important; /* Force block display */
+  margin-top: 10px;
+  margin-left: 0; /* Removed left margin to align with text */
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  width: fit-content; /* Ensures the button is only as wide as its content */
+  float: none !important; /* Prevent floating */
+  clear: both !important; /* Clear any floats */
+  position: relative; /* Establish positioning context */
+}
+
+.copy-button:hover {
+  background-color: #e0e0e0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.copy-button:active {
+  background-color: #d0d0d0;
+  transform: translateY(1px);
+}
+
+.copy-button.copied {
+  background-color: #4CAF50;
+  color: white;
+  border-color: #45a049;
+}
+
+/* Стили для контейнера текста параграфа в обоих представлениях */
+.location-paragraph-text, 
+.paragraph-text-content,
+.location-text {
+  position: relative;
+  margin-bottom: 5px;
+  display: block; /* Ensure text container is block-level */
+  overflow: visible; /* Ensure content doesn't get cut off */
+}
+
+/* Специальные стили для документоориентированного вида */
+.document-oriented-view .location-paragraph-text {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: rgba(240, 248, 255, 0.5);
+  border-radius: 6px;
+  border-left: 3px solid #3498db;
+}
+
+/* Улучшаем отображение кнопки в документоориентированном режиме */
+.document-oriented-view .copy-button {
+  margin-top: 10px;
+  margin-left: 0;
+  display: block !important;
+}
+
+/* Стили для кнопки копирования в правилоориентированном виде */
+.rule-oriented-view .copy-button,
+.location-text + .copy-button {
+  margin-top: 10px;
+  margin-left: 0;
+  display: block !important;
+}
+
+/* Выделение активного параграфа */
+.paragraph-container:hover {
+  background-color: rgba(240, 248, 255, 0.3);
+}
+
+/* Улучшаем читаемость текста параграфа */
+.paragraph-text-content {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Обеспечиваем правильное расположение кнопки относительно текста */
+.paragraph-text-content + .copy-button,
+.location-text + .copy-button {
+  clear: both !important; /* Ensures the button starts on a new line */
+  float: none !important; /* Prevent floating */
+  display: block !important; /* Force block display */
+}
+
+/* Дополнительные стили для правилоориентированного представления */
+.rule-oriented-view .location-text {
+  display: block !important;
+  width: 100% !important;
+  float: none !important;
+  margin-bottom: 10px !important;
+}
+
+/* Принудительное отображение кнопки под текстом в правилоориентированном представлении */
+.rule-oriented-view .location-text + .copy-button {
+  display: block !important;
+  width: fit-content !important;
+  float: none !important;
+  clear: both !important;
+  margin-top: 10px !important;
+  margin-left: 0 !important;
+  position: relative !important;
+}
+
+/* Исправление для контейнера локаций */
+.locations-container {
+  overflow: visible !important; /* Ensure content doesn't get cut off */
+}
+
+/* Исправление для элемента локации */
+.location-item {
+  overflow: visible !important; /* Ensure content doesn't get cut off */
+}
+
+/* Исправление для заголовка локации */
+.location-header {
+  overflow: visible !important; /* Ensure content doesn't get cut off */
+}
+
+/* Обеспечение правильного отображения текста локации */
+.location-text {
+  display: block !important;
+  width: 100% !important;
+  float: none !important;
+  margin-bottom: 10px !important;
+  overflow: visible !important;
+}
+
+
+/* Fix for copy button positioning in rule-oriented view */
+.rule-oriented-view .location-text {
+  display: block !important;
+  width: 100% !important;
+  float: none !important;
+  clear: both !important;
+  margin-bottom: 10px !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.rule-oriented-view .location-item {
+  position: relative !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.rule-oriented-view .copy-button {
+  display: block !important;
+  width: fit-content !important;
+  float: none !important;
+  clear: both !important;
+  margin-top: 5px !important;
+  margin-bottom: 10px !important;
+  margin-left: 0 !important;
+  position: relative !important;
+  align-self: flex-start !important;
+  order: 2 !important;
+}
+
+/* Ensure proper spacing and layout for location items */
+.location-item {
+  display: flex !important;
+  flex-direction: column !important;
+  padding-bottom: 15px !important;
+}
+
+.location-header {
+  width: 100% !important;
+  order: 1 !important;
+}
+
+.location-text {
+  width: 100% !important;
+  order: 2 !important;
+}
+
+/* Ensure the copy button is always below the text */
+.location-text + .copy-button {
+  order: 3 !important;
+  margin-top: 5px !important;
+  margin-left: 0 !important;
+}
+
+/* Fix for any nested elements that might affect positioning */
+.location-item * {
+  max-width: 100% !important;
+}
+
+/* Ensure proper spacing between elements */
+.location-text {
+  margin-bottom: 5px !important;
+}
+
+/* Fix for any floating issues */
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+/* Ensure the button is visible and properly styled */
+.copy-button {
+  z-index: 5 !important;
+  position: relative !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Fix for any container overflow issues */
+.locations-container, 
+.rule-details, 
+.document-details {
+  overflow: visible !important;
 }

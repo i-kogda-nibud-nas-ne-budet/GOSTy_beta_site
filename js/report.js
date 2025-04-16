@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     removeUnwantedButtons();
     initializeFixedRulesProgress();
     expandAllPassedRulesContainers();
+    initializeCopyButtons(); 
     // Показать приветственное уведомление
     showNotification('Отчет успешно загружен', 'success');
 });
@@ -2886,4 +2887,117 @@ function togglePassedRules(documentId) {
             }, 300);
         }
     }
+}
+
+/**
+ * Инициализация кнопок копирования для всех текстов параграфов
+ * Работает как в правилоориентированном, так и в документоориентированном режиме
+ */
+function initializeCopyButtons() {
+    // Функция для добавления кнопки к элементам параграфа
+    function addCopyButtonTo(paragraphText) {
+        // Проверяем, что у элемента есть текст для копирования
+        if (paragraphText.textContent.trim() !== '') {
+            // Проверяем, не добавлена ли уже кнопка копирования
+            const parentElement = paragraphText.parentElement;
+            if (!parentElement.querySelector('.copy-button')) {
+                // Создаем кнопку копирования
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.innerHTML = '📋 Копировать';
+                copyButton.title = 'Копировать текст в буфер обмена';
+                
+                // Добавляем обработчик события клика
+                copyButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Копируем текст в буфер обмена
+                    const textToCopy = paragraphText.textContent;
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => {
+                            // Меняем текст кнопки на короткое время для подтверждения
+                            const originalText = copyButton.innerHTML;
+                            copyButton.innerHTML = '✅ Скопировано!';
+                            copyButton.classList.add('copied');
+                            
+                            // Возвращаем исходный текст через 2 секунды
+                            setTimeout(() => {
+                                copyButton.innerHTML = originalText;
+                                copyButton.classList.remove('copied');
+                            }, 2000);
+                            
+                            // Показываем уведомление
+                            showNotification('Текст скопирован в буфер обмена', 'success');
+                        })
+                        .catch(err => {
+                            console.error('Ошибка при копировании текста:', err);
+                            copyButton.innerHTML = '❌ Ошибка';
+                            setTimeout(() => {
+                                copyButton.innerHTML = '📋 Копировать';
+                            }, 2000);
+                            
+                            showNotification('Не удалось скопировать текст', 'error');
+                        });
+                });
+                
+                // Вместо добавления кнопки в родительский элемент, вставляем её после текстового элемента
+                // Это ключевое изменение, которое гарантирует, что кнопка будет под текстом
+                paragraphText.insertAdjacentElement('afterend', copyButton);
+            }
+        }
+    }
+    
+    // Находим все элементы с текстом параграфа в правилоориентированном представлении
+    const ruleBasedParagraphs = document.querySelectorAll('.location-text');
+    ruleBasedParagraphs.forEach(addCopyButtonTo);
+    
+    // Обработчик для документоориентированного представления
+    function processParagraphContainers() {
+        // Находим все элементы с текстом параграфа в документоориентированном представлении
+        const documentBasedParagraphs = document.querySelectorAll('.paragraph-text-content');
+        documentBasedParagraphs.forEach(addCopyButtonTo);
+        
+        // Также находим содержимое локаций в документоориентированном представлении
+        const locationParagraphs = document.querySelectorAll('.location-paragraph-text .paragraph-text-content');
+        locationParagraphs.forEach(addCopyButtonTo);
+    }
+    
+    // Обрабатываем документоориентированное представление
+    processParagraphContainers();
+    
+    // Добавляем обработчик для переключения режимов просмотра
+    const viewModeToggle = document.getElementById('view-mode-toggle');
+    if (viewModeToggle) {
+        viewModeToggle.addEventListener('change', function() {
+            // При переключении режимов заново инициализируем кнопки
+            setTimeout(processParagraphContainers, 100);
+        });
+    }
+    
+    // Обработчик мутаций для динамического добавления кнопок к новым элементам
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length) {
+                // Проверяем, есть ли среди добавленных узлов документоориентированное представление
+                for (let i = 0; i < mutation.addedNodes.length; i++) {
+                    const node = mutation.addedNodes[i];
+                    if (node.nodeType === 1) { // Проверяем, что это элемент
+                        if (node.classList && 
+                           (node.classList.contains('document-oriented-view') || 
+                            node.classList.contains('paragraph-container') || 
+                            node.classList.contains('location-paragraph-text'))) {
+                            setTimeout(processParagraphContainers, 100);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+    });
+    
+    // Наблюдаем за изменениями в документе
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    console.log('Инициализация кнопок копирования завершена');
 }
