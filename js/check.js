@@ -253,12 +253,11 @@ function setupFileSubmission() {
 
 
 
+
 /**
  * Отправляет файл на сервер для проверки
  * @param {File} file - Файл для отправки
- * @returns {void}
  */
-
 function sendFileToServer(file) {
     console.log(`Отправка файла на сервер: ${file.name}`);
     
@@ -277,23 +276,42 @@ function sendFileToServer(file) {
     formData.append('full_report', 'true');
     formData.append('document_oriented', 'true');
     
-    // URL для API-light - изменено с порта 8000 на стандартный порт 443 для HTTPS
-    const apiUrl = 'https://185.211.170.111/api/documents/validate';
+    // URL для API-light - используем новый адрес сервера
+    const apiUrl = 'https://217.25.90.163/api/documents/validate';
     console.log(`URL API: ${apiUrl}`);
     
-    // Отправка файла на сервер
-    console.log('Выполнение fetch запроса...');
+    // Отправка файла на сервер с CORS настройками
+    console.log('Выполнение fetch запроса с CORS настройками...');
     
     fetch(apiUrl, {
         method: 'POST',
-        body: formData
+        body: formData,
+        // Добавляем поддержку credentials для CORS
+        credentials: 'include',
+        // Добавляем необходимые заголовки для CORS
+        headers: {
+            'Accept': 'application/json',
+            // Явно не указываем Content-Type, так как браузер сам добавляет
+            // правильный заголовок с boundary для multipart/form-data
+        },
+        // Режим запроса с CORS
+        mode: 'cors'
     })
     .then(response => {
         console.log(`Получен ответ от сервера, статус: ${response.status}`);
         console.log('Заголовки ответа:', response.headers);
         
+        // Проверяем, есть ли заголовки CORS в ответе
+        const corsHeader = response.headers.get('access-control-allow-origin');
+        console.log(`CORS заголовок: ${corsHeader}`);
+        
         if (!response.ok) {
-            throw new Error('Ошибка сервера: ' + response.status);
+            // Более информативное сообщение об ошибке
+            if (response.status === 0) {
+                throw new Error('Сетевая ошибка. Проверьте соединение или CORS настройки.');
+            } else {
+                throw new Error(`Ошибка сервера: ${response.status} ${response.statusText || ''}`);
+            }
         }
         
         // Проверяем тип ответа
@@ -301,7 +319,11 @@ function sendFileToServer(file) {
         console.log(`Тип содержимого ответа: ${contentType}`);
         
         // В api-light ответ всегда JSON
-        return response.json();
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            throw new Error(`Неподдерживаемый тип содержимого: ${contentType}`);
+        }
     })
     .then(data => {
         console.log('Получены данные от API:', data);
@@ -315,8 +337,8 @@ function sendFileToServer(file) {
         if (data.document_id && data.report_url) {
             console.log(`Получен report_url: ${data.report_url}`);
             
-            // Формируем полный URL отчета - также используем HTTPS через Nginx
-            const fullReportUrl = `https://185.211.170.111${data.report_url}`;
+            // Формируем полный URL отчета с новым адресом сервера
+            const fullReportUrl = `https://217.25.90.163${data.report_url}`;
             
             // Сохраняем результат валидации в localStorage
             localStorage.setItem('validationResult', JSON.stringify(data));
@@ -358,7 +380,13 @@ function sendFileToServer(file) {
     })
     .catch(error => {
         console.error('Ошибка при отправке файла:', error);
-        showError(error.message);
+        
+        // Проверяем, связана ли ошибка с CORS
+        if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+            showError('Ошибка доступа к серверу. Возможно, проблема связана с настройками CORS. Пожалуйста, обратитесь к администратору.');
+        } else {
+            showError(error.message);
+        }
     });
     
     /**
@@ -524,7 +552,6 @@ function sendFileToServer(file) {
         return html;
     }
 }
-
 
 
 /**
