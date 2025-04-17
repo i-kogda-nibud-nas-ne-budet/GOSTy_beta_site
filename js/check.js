@@ -258,6 +258,7 @@ function setupFileSubmission() {
  * @param {File} file - Файл для отправки
  * @returns {void}
  */
+
 function sendFileToServer(file) {
     console.log(`Отправка файла на сервер: ${file.name}`);
     
@@ -276,8 +277,8 @@ function sendFileToServer(file) {
     formData.append('full_report', 'true');
     formData.append('document_oriented', 'true');
     
-    // URL для API-light
-    const apiUrl = 'https://185.211.170.111:8000/api/documents/validate';
+    // URL для API-light - изменено с порта 8000 на стандартный порт 443 для HTTPS
+    const apiUrl = 'https://185.211.170.111/api/documents/validate';
     console.log(`URL API: ${apiUrl}`);
     
     // Отправка файла на сервер
@@ -314,8 +315,8 @@ function sendFileToServer(file) {
         if (data.document_id && data.report_url) {
             console.log(`Получен report_url: ${data.report_url}`);
             
-            // Формируем полный URL отчета
-            const fullReportUrl = `https://185.211.170.111:8000${data.report_url}`;
+            // Формируем полный URL отчета - также используем HTTPS через Nginx
+            const fullReportUrl = `https://185.211.170.111${data.report_url}`;
             
             // Сохраняем результат валидации в localStorage
             localStorage.setItem('validationResult', JSON.stringify(data));
