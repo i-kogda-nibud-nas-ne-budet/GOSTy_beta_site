@@ -4,7 +4,7 @@
  */
 
 class NormifyApi {
-  constructor(baseUrl = 'http://localhost:8000') {
+  constructor(baseUrl = 'https://xn--j1acbdcdcbnev7j.xn--p1ai/') {
     this.baseUrl = baseUrl;
     this.token = localStorage.getItem('normify_token') || null;
   }

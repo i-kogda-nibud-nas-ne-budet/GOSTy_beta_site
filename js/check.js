@@ -277,7 +277,7 @@ function sendFileToServer(file) {
     formData.append('document_oriented', 'true');
     
     // URL для API-light
-    const apiUrl = 'http://127.0.0.1:8000/api/documents/validate';
+    const apiUrl = 'http://185.211.170.111:8000/api/documents/validate';
     console.log(`URL API: ${apiUrl}`);
     
     // Отправка файла на сервер
@@ -315,7 +315,7 @@ function sendFileToServer(file) {
             console.log(`Получен report_url: ${data.report_url}`);
             
             // Формируем полный URL отчета
-            const fullReportUrl = `http://127.0.0.1:8000${data.report_url}`;
+            const fullReportUrl = `http://185.211.170.111:8000${data.report_url}`;
             
             // Сохраняем результат валидации в localStorage
             localStorage.setItem('validationResult', JSON.stringify(data));
