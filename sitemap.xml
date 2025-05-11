@@ -20,7 +20,13 @@
    </url>
    <url>
       <loc>https://нормконтроль.рф/ai-analysis.html</loc>
-      <lastmod>2025-04-04</lastmod>
+      <lastmod>2025-05-10</lastmod>
+      <changefreq>hourly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   <url>
+      <loc>https://нормконтроль.рф/colloboration.html</loc>
+      <lastmod>2025-05-11</lastmod>
       <changefreq>hourly</changefreq>
       <priority>0.8</priority>
    </url>
