@@ -245,7 +245,7 @@ nav ul li a.active::after {
 }
 
 /* Эффект печатной машинки для заголовков */
-.typewriter h2 {
+.typewriter h2,h1 {
   overflow: hidden;
   border-right: .15em solid transparent;
   white-space: nowrap;
